@@ -1,0 +1,1 @@
+<?php$message = 'User '.$username.' has requested a withdrawal of '.$mount.'.  Please log into your site to Approve or Decline the request.';?>
