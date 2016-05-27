@@ -77,7 +77,7 @@ class Entry
         //player picks
         $playerPicks = self::$fanvictor->getPlayerPicks($leagueID, $entry_number);
 
-        if($playerPicks == null)
+        if($playerPicks == null && $league[0]['gameType'] != 'GOLFSKIN')
         {
             redirect(FANVICTOR_URL_CREATE_CONTEST, __('You did not select any players', FV_DOMAIN));
         }
@@ -94,11 +94,10 @@ class Entry
             $aFights = $data['fights'];
             $aPlayers = $data['players'];
             $allow_pick_email = $data['allow_pick_email'];
-
+            
             //cur user
             $current_user = wp_get_current_user();
-            $user_avatar = self::$fanvictor->get_avatar_url(get_avatar(get_current_user_id(), 32 ));
-
+            $user_avatar = self::$fanvictor->get_avatar_url(self::$fanvictor->get_avatar($_COOKIE['fanvictor_user_id'], 32 ));
             //list friend
             $aFriends = self::$fanvictor->getAllPlayerInfo();
             $iTotalFriends = count($aFriends);
@@ -111,6 +110,10 @@ class Entry
             
             //allow show popup
             $showInviteFriends = false;
+            $link_contest = FANVICTOR_URL_ENTRY;
+            if($league['gameType'] == 'GOLFSKIN'){
+                $link_contest = FANVICTOR_URL_GAME;
+            }
             if(isset($_SESSION['showInviteFriends'.$leagueID]) && $aPool['status'] == "NEW")
             {
                 unset($_SESSION['showInviteFriends'.$leagueID]);

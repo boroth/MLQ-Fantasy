@@ -3,7 +3,7 @@
  * Plugin Name: Fan Victor
  * Plugin URI: http://plugins.svn.wordpress.org/fantasy-sports/ 
  * Description: Create a fantasy sports website in minutes. Give your members the chance to compete in daily contests by predicting the outcomes of sporting events.  To get started: 1) Click the "Activate" link to the left of this description, 2) Sign up for a Fan Victor API key, and 3) Go to your FanVictor.com members page, and save your API key.
- * Version: 2.1.35
+ * Version: 2.1.37
  * Author: Mega Website Services
  * Author URI: http://fanvictor.com
  * License: GPL2
@@ -24,11 +24,10 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-
 ob_start();
 
 $upload_dir = wp_upload_dir();
-define('FANVICTOR_VERSION', '2.1.35');
+define('FANVICTOR_VERSION', '2.1.37');
 define('FV_DOMAIN', 'fantasy-sports');
 define('FANVICTOR__PLUGIN_URL', plugin_dir_url(__FILE__));
 define('FANVICTOR__PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -42,6 +41,8 @@ define('FANVICTOR__PLUGIN_URL_AJAX', FANVICTOR__PLUGIN_URL.'fanvictor.php');
 define('FANVICTOR_IMAGE_URL', $upload_dir['baseurl'].'/');
 define('FANVICTOR_IMAGE_DIR', $upload_dir['basedir'].'/');
 define('FANVICTOR_EMAIL_SUPPORT', 'support@fanvictor.com');
+define('FANVICTOR_PAYPAL_TYPE_NORMAL', 0);
+define('FANVICTOR_PAYPAL_TYPE_PRO', 1);
 
 $permalink_structure = get_option('permalink_structure');
 if($permalink_structure == '')
@@ -84,6 +85,9 @@ if($permalink_structure == '')
     
     $mypage = get_page_by_title('Contest');
 	define('FANVICTOR_URL_CONTEST', site_url().'/?page_id='.$mypage->ID);
+
+    $mypage = get_page_by_title('Pick Square');
+    define('FANVICTOR_URL_PICK_SQUARES', site_url().'/?page_id='.$mypage->ID);
 }
 else 
 {
@@ -101,6 +105,10 @@ else
 	define('FANVICTOR_URL_TRANSACTIONS', site_url().'/fantasy/transactions/');
 	define('FANVICTOR_URL_SUCCESS_WITHDRAWLS', site_url().'/fantasy/success-withdrawls/');
 	define('FANVICTOR_URL_NOTIFY_WITHDRAWLS', site_url().'/fantasy/notify-withdrawls/');
+    define('FANVICTOR_URL_PICK_SQUARES', site_url().'/fantasy/pick-squares/');
+
+
+	
 }
 
 function caption_shortcode( $atts, $content = null ) {
@@ -130,9 +138,9 @@ add_action( 'plugins_loaded', array('FanvictorInit', 'upgrade'));
 require_once(plugin_dir_path(__FILE__)."/languages/js-pt_PT.php");
 
 add_action('init', 'session_start');
-
 function fv_init(){
 	load_plugin_textdomain(FV_DOMAIN, false, dirname(plugin_basename(__FILE__))."/languages/");
 }
 add_action('plugins_loaded', 'fv_init');
+
 ?>

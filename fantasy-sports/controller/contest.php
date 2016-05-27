@@ -52,7 +52,6 @@ class Contest
             $bonus = $aData['bonus'];
             $aRounds = $aData['rounds'];
             $aFights = $aData['fights'];
-
             //pool
             //self::$pools->selectField(array('startDate'));
             //$aPool = self::$pools->getPools($league['poolID'], null, false, true);

@@ -21,7 +21,6 @@ class Fanvictor_Pools
         self::$urladdnew = admin_url().'admin.php?page=add-pools';
         self::$urladd = wp_get_referer();
     }
-    
     public static function managePools()
     {
         //load css js
@@ -38,6 +37,9 @@ class Fanvictor_Pools
             {
                 case "delete":
                     self::delete();
+                    break;
+                case 'upload':
+                    self::upload();
                     break;
             }
         }
@@ -188,5 +190,60 @@ class Fanvictor_Pools
 		}
         redirect(self::$url);
 	}
+    private static function upload(){
+        if(empty($_FILES)){
+            return;
+        }
+        $aFiles = $_FILES;
+        $info = $_POST['info'];
+        foreach($aFiles as $key=>$file){
+            if($file['error'] >0){
+                continue;
+            }
+            $poolID = explode('_',$key);
+            $poolID = $poolID[2];
+            if(!isset($info[$poolID])){
+                continue;
+            }
+            // check extension
+            $extension = end(explode('.', $file['name']));
+            if(strtolower($extension) != 'csv'){
+                continue;
+            }
+            $detailInfo = $info[$poolID];
+            $detailInfo = json_decode(stripslashes($detailInfo),true);
+            $data['file_name'] = $file['name'];
+            $data['poolID'] = $poolID;
+            $data['org_id'] = $detailInfo['org_id'];
+            $data['startDate'] = $detailInfo['startDate'];
+            $tool_url = self::$fanvictor->createFolderCustomSport($data);
+
+            $upload['filename'] = $file['name'];
+            $upload['upload_file'] = '@'.$file['tmp_name'];
+            $upload['dir_path'] = $tool_url[0];
+            $upload['filesize'] = $file['size'];
+            self::sendFile($upload);
+
+            
+        }
+    }
+    
+    public static function sendFile($file){
+    $url = get_option('fanvictor_api_url_admin').'/upload_file.php';
+        $headers = array("Content-Type:multipart/form-data"); // cURL headers for file uploading
+        $postfields = array("filedata" => $file['upload_file'], "filename" => $file['filename'],'dir_path'=>$file['dir_path']);
+        $ch = curl_init();
+        $options = array(
+            CURLOPT_URL => $url,
+            CURLOPT_HEADER => true,
+            CURLOPT_POST => 1,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_POSTFIELDS => $postfields,
+            CURLOPT_INFILESIZE => $file['filesize'],
+            CURLOPT_RETURNTRANSFER => true
+        ); // cURL options
+        curl_setopt_array($ch, $options);
+        curl_exec($ch);
+    }    
 }
 ?>

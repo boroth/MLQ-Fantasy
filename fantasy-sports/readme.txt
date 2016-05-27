@@ -4,7 +4,7 @@ Donate link: http://fanvictor.com/
 Tags: fantasy sports, fantasy football, fantasy baseball, fantasy hockey, fantasy basketball
 Requires at least: 4.0
 Tested up to: 4.3
-Stable tag: 2.1.35
+Stable tag: 2.1.37
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -159,6 +159,26 @@ Absolutely. Please contact support@fanvictor.com and be part of a very cool and 
 6. Here are all the admin functions available to site admins.
 
 == Changelog ==
+
+= Version 2.1.37 released May 20 2015 =
+
+* Fix some bugs
+
+* Add new option "Draw" for pick em game type
+
+* Send email fo admin when create contest
+
+= Version 2.1.36 released May 9 2015 =
+
+* New golf game type: Best 5, Skin
+
+* New payment method: paypal pro
+
+* Allow users upload stats file for their own events
+
+* Fix some bugs
+
+* Improve performance
 
 = Version 2.1.35 released Mar 14 2015 =
 

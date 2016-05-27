@@ -1,30 +1,52 @@
 jQuery.playerdraft =
 {
-    setData : function(aPlayers, salaryRemaining, playerIdPicks, league, aFights, aPool, aIndicators)
+    setData : function()
     {
-        this.aPlayers = aPlayers;
-        this.salaryRemaining = salaryRemaining;
-        this.salaryCap = salaryRemaining;
-        this.playerIdPicks = playerIdPicks;
-        this.league = league;
-        this.aFights = aFights;
-        this.aPool = aPool;
-        this.aIndicators = aIndicators;
+        this.aPlayers = jQuery('#dataPlayers').html();
+        this.salaryRemaining = jQuery('#dataSalaryRemaining').html();
+        this.salaryCap = jQuery('#dataSalaryRemaining').html();
+        this.playerIdPicks = jQuery('#dataPlayerIdPicks').html();
+        this.league = jQuery('#dataLeague').html();
+        this.aFights = jQuery('#dataFights').html();
+        this.aPool = jQuery('#dataPool').html();
+        this.aIndicators = jQuery('#dataIndicators').html();
         this.scoringCat = '';
     },
-    mixSetData : function(aPlayers, salaryRemaining, playerIdPicks, league, aFights, aPool, aIndicators,aLineUps,aPositions)
+    golfSkinSetData : function()
     {
-        this.aPlayers = aPlayers;
-        this.salaryRemaining = salaryRemaining;
-        this.salaryCap = salaryRemaining;
-        this.playerIdPicks = playerIdPicks;
-        this.league = league;
-        this.aFights = aFights;
-        this.aPool = aPool;
-        this.aIndicators = aIndicators;
+        this.aPlayers = jQuery('#dataPlayers').html();
+        this.salaryRemaining = jQuery('#dataSalaryRemaining').html();
+        this.salaryCap = jQuery('#dataSalaryRemaining').html();
+        this.playerIdPicks = jQuery('#dataPlayerIdPicks').html();
+        this.league = jQuery('#dataLeague').html();
+        this.aFights = jQuery('#dataFights').html();
+        this.aPool = jQuery('#dataPool').html();
+        this.aIndicators = jQuery('#dataIndicators').html();
+        this.scoringCat = '';
+        this.totalMoney = jQuery('#dataTotalMoney').html();
+        this.balance = jQuery('#dataBalance').html();
+        this.entry_fee = jQuery('#dataentryFee').html();
+        this.is_entry_fee = jQuery('#dataIsEntryFee').html();
+        aGolfSkinPlayers = JSON.parse(jQuery('#dataPlayerGolfSkin').html());
+        if(jQuery.isArray(aGolfSkinPlayers)){
+            this.aGolfSkinPlayers = {};
+        }else{
+            this.aGolfSkinPlayers  = aGolfSkinPlayers;
+        }
+    },
+    mixSetData : function()
+    {
+        this.aPlayers = jQuery('#dataPlayers').html();
+        this.salaryRemaining = jQuery('#dataSalaryRemaining').html();
+        this.salaryCap = jQuery('#dataSalaryRemaining').html();
+        this.playerIdPicks = jQuery('#dataPlayerIdPicks').html();
+        this.league = jQuery('#dataLeague').html();
+        this.aFights = jQuery('#dataFights').html();
+        this.aPool = jQuery('#dataPool').html();
+        this.aIndicators = jQuery('#dataIndicators').html();
         this.scoringCat = ''; 
-        this.aLineUps = aLineUps;
-        this.aPostiions = aPositions;
+        this.aLineUps = jQuery('#dataLineups').html();
+        this.aPostiions = jQuery('#dataPositions').html();
     },
     loadPlayers: function()
     {
@@ -35,6 +57,7 @@ jQuery.playerdraft =
         var aPlayers = jQuery.parseJSON(this.aPlayers);
         var aIndicators = jQuery.parseJSON(this.aIndicators);
         var keyword = jQuery('#player-search').val().toString();
+        var league = jQuery.parseJSON(this.league);
         if(aPlayers.length > 0)
         {
             var html = '';
@@ -95,20 +118,33 @@ jQuery.playerdraft =
                             {
                                 htmlPitcher = ' <span class="f-player-badge f-player-badge-injured-possible">S</span> ';
                             }
-                            html += '<tr class="f-pR" data-role="player">\n\
+                            if(league.gameType == 'GOLFSKIN'){
+                                html += '<tr class="f-pR" data-role="player">\n\
+                                        <td class="f-player-name">\n\
+                                            <div onclick="jQuery.playerdraft.playerInfo(' + aPlayer.id + ')">' + aPlayer.name + htmlPitcher + htmlIndicator + '</div>\n\
+                                        </td>';
+                            }else{
+                                html += '<tr class="f-pR" data-role="player">\n\
                                         <td class="f-player-position">' + positionName + '</td>\n\
                                         <td class="f-player-name">\n\
                                             <div onclick="jQuery.playerdraft.playerInfo(' + aPlayer.id + ')">' + aPlayer.name + htmlPitcher + htmlIndicator + '</div>\n\
                                         </td>';
+                            }
+                            
                             if(aPool.only_playerdraft == 0)
                             {
                                 html += 
                                         '<td class="f-player-played">' + aPlayer.myteam + '</td>\n\
                                         <td class="f-player-fixture">' + match + '</td>';
                             }
-                            html +=
+                            if(league.gameType=='GOLFSKIN'){
+                                html += '<td class="f-player-add">';
+                            }else{
+                                html +=
                                         '<td class="f-player-salary">$' + accounting.formatNumber(aPlayer.salary) + '</td>\n\
-                                        <td class="f-player-add">';
+                                        <td class="f-player-add">'; 
+                            }
+                           
                             if(aPlayer.disable == 0)
                             {
                                 html += 
@@ -461,9 +497,7 @@ jQuery.playerdraft =
         var aPool = jQuery.parseJSON(this.aPool);
 
         var player = this.findPlayer(id);
-        // for mixing sport game
-        
-   
+        // for mixing sport game   
         if(jQuery("#type_league").val() == 'mixing'){
 
             if(this.playerIdPicks != ''){
@@ -483,10 +517,26 @@ jQuery.playerdraft =
             {
                 position_id = 0;
             }
-
-            var item = jQuery('.player-position-' + position_id + ':not(.f-has-player)').first();
+            if(jQuery("#game_type").val() == 'GOLFSKIN'){
+                var item = jQuery('.player-position' + ':not(.f-has-player)').first();
+            }else{
+                var item = jQuery('.player-position-' + position_id + ':not(.f-has-player)').first();
+            }
             if(item.length == 1)
             {
+                
+                if(jQuery("#game_type").val() == 'GOLFSKIN'){
+                    var round_id = jQuery(".f-fixture-picker-button-container .f-is-active").attr('data-id');      
+                    if(!jQuery.isArray(this.aGolfSkinPlayers[round_id])){
+                        this.aGolfSkinPlayers[round_id] = [];
+                    }
+                    if(this.aGolfSkinPlayers[round_id].indexOf(id) === -1){
+                        this.aGolfSkinPlayers[round_id].push(id);
+                        this.golfSkinCaculateMoney('plus');
+                    }  
+                    
+                }
+                
                 jQuery('#buttonAdd' + id).hide();
                 jQuery('#buttonAdd' + id).parents('tr').addClass('f-player-in-lineup');
                 jQuery('#buttonRemove' + id).css('display', 'block');
@@ -531,10 +581,17 @@ jQuery.playerdraft =
                     {
                         positionName = '';
                     }
-                    jQuery('.f-errorMessage').empty().append(wpfs['fullpositions1'] + positionName + " " + wpfs['fullpositions2']).slideToggle().delay(4000).fadeOut();
+                      if(jQuery("#game_type").val() == 'GOLFSKIN'){
+                            jQuery('.f-errorMessage').empty().append(wpfs['fullpositions1'] + " " + wpfs['fullpositions2']).slideToggle().delay(4000).fadeOut();
+
+                      }else{
+                            jQuery('.f-errorMessage').empty().append(wpfs['fullpositions1'] + positionName + " " + wpfs['fullpositions2']).slideToggle().delay(4000).fadeOut();
+
+                      }
                 }
             }
         }
+        
     },
 	
 	addMultiPlayers:function(playersID)
@@ -556,14 +613,32 @@ jQuery.playerdraft =
     
     clearPlayer: function(id)
     {
+        
         jQuery('#buttonAdd' + id).css('display', 'block');
         jQuery('#buttonAdd' + id).parents('tr').removeClass('f-player-in-lineup');
         jQuery('#buttonRemove' + id).hide();
         this.resetLineup(id);
-        this.calculateSalary(id, 'remove');
-        this.calculateAvgPerPlayer();
+        if(jQuery("#game_type").val() == 'GOLFSKIN'){
+            this.golfSkinClearPlayer(id);
+        }else{
+            this.calculateSalary(id, 'remove');
+            this.calculateAvgPerPlayer(); 
+        }
+
     },
-    
+    golfSkinClearPlayer: function(id)
+    {
+        id = parseInt(id);
+         var round_id = jQuery(".f-fixture-picker-button-container .f-is-active").attr('data-id');  
+                    if(jQuery.isArray(this.aGolfSkinPlayers[round_id])){
+                        var index = this.aGolfSkinPlayers[round_id].indexOf(id);
+                        if(index !== -1){
+                            this.aGolfSkinPlayers[round_id].splice(index,1);
+                            this.golfSkinCaculateMoney('minus');
+                        }
+                    }
+    }
+    ,
     clearAllPlayer: function()
     {
         if(confirm(wpfs['players_out_team']))
@@ -687,9 +762,51 @@ jQuery.playerdraft =
             jQuery('#formLineup').submit();
         }
     },
-    
+    golfSkinSubmitData: function(){
+        var aLeague = jQuery.parseJSON(this.league);
+        var rounds = aLeague.rounds;
+        var isSuccess = false
+        rounds = rounds.split(",");
+        for(var i in rounds){
+            if(jQuery.isArray(this.aGolfSkinPlayers[rounds[i]]) && this.aGolfSkinPlayers[rounds[i]].length > 1){
+                isSuccess = true;
+                break;
+            }
+        }
+
+        if(isSuccess == false){
+            alert(wpfs['golfskin_player_position']);
+            return;
+        }
+        var obj = this;
+        jQuery('#btnSubmit').attr('disabled', 'true').text(wpfs['working'] + '...');
+        if(this.is_entry_fee){
+            jQuery.post(ajaxurl, 'action=getUserbalance', function(result) {
+            result = jQuery.parseJSON(result);
+            jQuery('#btnSubmit').removeAttr('disabled').text(wpfs['enter']);
+            if(parseInt(result.balance) < obj.totalMoney){
+              alert(wpfs['golfskin_add_balance']);
+            }else{
+                jQuery("#total_money").val(obj.totalMoney);
+                jQuery("#players").val(JSON.stringify(obj.aGolfSkinPlayers));
+                jQuery('#formLineup').submit();
+               
+            }
+         }); 
+        }else{
+                jQuery("#total_money").val(obj.totalMoney);
+                jQuery("#players").val(JSON.stringify(obj.aGolfSkinPlayers));
+                jQuery('#formLineup').submit();
+        }
+
+    }
+    ,
     userResult: function(leagueID, is_curent, userID, username, avatar, rank, totalScore, entry_number)
     {
+        var name = 'Score';
+        if(jQuery("#gameType").val() == 'GOLFSKIN'){
+            name = 'Skin';
+        }
         //load user info
         var html = 
             '<div class="f-user-score-summary f-clearfix">\n\
@@ -708,7 +825,7 @@ jQuery.playerdraft =
                     </div>\n\
                     <div class="f-score right">\n\
                         <header>\n\
-                            <h6>Score</h6>\n\
+                            <h6>'+name+'</h6>\n\
                         </header>\n\
                         <h1 class="f-user-score f-positive  ">' + totalScore + '</h1>\n\
                     </div>\n\
@@ -730,6 +847,11 @@ jQuery.playerdraft =
         //load result
         var leagueOptionType = jQuery('#leagueOptionType').val();
         var data = 'leagueID=' + leagueID + '&userID=' + userID + '&entry_number=' + entry_number;
+        var round_id = 0;
+         if(jQuery("#gameType").val() == 'GOLFSKIN'){
+             round_id = jQuery('#list_round').val();
+         }
+         data+='&roundID='+round_id;
         jQuery.post(ajaxurl, "action=loadUserResult&" + data, function(data) {
             data = jQuery.parseJSON(data);
             html = '';
@@ -781,7 +903,7 @@ jQuery.playerdraft =
                     }
                     
                     var htmlPosition = '';
-                    if((typeof aResult.player_position != 'undefined') && (leagueOptionType != 'salary'))
+                    if((typeof aResult.player_position != 'undefined') && (leagueOptionType != 'salary') && jQuery("#gameType").val() != 'GOLFSKIN')
                     {
                         htmlPosition = 
                             '<div class="f-pos">\n\
@@ -961,13 +1083,15 @@ jQuery.playerdraft =
             }
         });
     },
-    
+    loadUserResultByRound: function(){
+        jQuery("#tableScores .f-user-highlight").trigger('click');
+    },
     loadFixtureScores: function(leagueID)
     {
         var data = 'leagueID=' + leagueID;
         jQuery.post(ajaxurl, "action=loadFixtureScores&" + data, function(result) {
             jQuery("#f-live-scoring-fixture-info").after(result).remove();
-        })
+        });
     },
     
     showIndicatorLegend: function()
@@ -1474,6 +1598,15 @@ jQuery.playerdraft =
         jQuery.post(ajaxurl, data, function(result) {})
     },
     
+    sendUserJoincontestEmail: function(league_id,entry_number){
+        var data = {
+            action: 'sendUserJoincontestEmail',
+            league_id: league_id,
+            entry_number: entry_number
+        };
+        jQuery.post(ajaxurl, data, function(result) {});
+    },
+    
     loading: function()
     {
         return '<div class="f-loading-indicator">\n\
@@ -1508,6 +1641,48 @@ jQuery.playerdraft =
         Copied = jQuery('.f-refer-link input').createTextRange();
         Copied.execCommand("RemoveFormat");
         Copied.execCommand(url);
+    },
+    selectGolfSkinRounds: function(e){
+        this.golfSkinResetPlayers();
+        var round_id = jQuery(e).attr('data-id');
+        for(var i in this.aGolfSkinPlayers){
+            if(round_id == i){
+                for(var j in this.aGolfSkinPlayers[round_id]){
+                    this.addPlayer(this.aGolfSkinPlayers[round_id][j]);
+                }
+            }
+        }
+    },
+    golfSkinResetPlayers: function(){
+        
+        var obj = this;
+            jQuery('.f-roster .f-roster-position').each(function(){
+                if(typeof jQuery(this).attr('data-id') != typeof undefined)
+                {
+                    
+                    var id = jQuery(this).attr('data-id');
+                    jQuery('#buttonAdd' + id).css('display', 'block');
+                    jQuery('#buttonAdd' + id).parents('tr').removeClass('f-player-in-lineup');
+                    jQuery('#buttonRemove' + id).hide();
+                    obj.resetLineup(id);
+                    
+                }
+            });
+        //========
+    },
+    golfSkinCaculateMoney: function(type){
+        if(this.is_entry_fee == 0){
+            return;
+        }
+       switch(type){
+            case 'plus':
+                this.totalMoney+=this.entry_fee;
+               break;
+            case 'minus':
+                this.totalMoney-=this.entry_fee;
+                break;
+       }
+       jQuery(".f-salary-remaining .f-salary-remaining-container span").html(this.totalMoney + ' $');
     }
 };
 

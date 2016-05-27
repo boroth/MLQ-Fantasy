@@ -7,14 +7,85 @@ class Fanvictor extends Model
         $this->pools = new Pools();
         $this->payment = new Payment();
         $this->scoringcategory = new ScoringCategory();
-        $this->postUserInfo();
+        if(empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']))
+        {
+            $this->postUserInfo();
+        }
+    }
+    public function get_avatar($user_id,$size=96){
+        if(!get_option('show_avatars')){
+            return false;
+        }
+        global $wpdb;
+        $table_user = $wpdb->prefix.'users';
+        $sCond = " WHERE ID = ".$user_id;
+        $sql = "Select user_email from $table_user $sCond";
+        $data = $wpdb->get_row($sql, ARRAY_A);
+        $email = $data['user_email'];
+        $email_hash = '';
+        $is_found_avatar = false;
+        // email hash
+        if ( strpos( $email, '@md5.gravatar.com' ) ) {
+			// md5 hash
+			list( $email_hash ) = explode( '@', $id_or_email );
+	} 
+        
+        if ($email_hash) {
+            $is_found_avatar = true;
+            $gravatar_server = hexdec($email_hash[0]) % 3;
+        } else {
+            $gravatar_server = rand(0, 2);
+        }
+        if (!$email_hash) {
+            if ($email) {
+                $email_hash = md5(strtolower(trim($email)));
+            }
+        }
+        if(is_ssl()){
+            $url = 'https://secure.gravatar.com/avatar/' . $email_hash;
+        }else{
+            $url = sprintf( 'http://%d.gravatar.com/avatar/%s', $gravatar_server, $email_hash );
+        }
+        $a_default = get_option('avatar_default');
+        switch ( $a_default ) {
+        case 'mm' :
+        case 'mystery' :
+        case 'mysteryman' :
+                $default = 'mm';
+                break;
+        case 'gravatar_default' :
+                $default = false;
+                break;
+        }
+        $a_rating = strtolower(get_option('avatar_rating'));
+        $url.="?s=$size&#038;d=$a_default&#038;r=$a_rating";
+        $avatar = sprintf(
+		"<img alt='%s' src='%s' class='%s' height='%d' width='%d'/>",
+		esc_attr( ''),
+		esc_url( $url ),
+		esc_attr( "" ),
+		esc_attr(( 'avatar avatar-'.$size.' photo') ),
+		(int)$size,
+		(int)$size
+	);
+        return $avatar;
+        
+    }
+    public function get_user_by( $field, $value ) {
+        $userdata = WP_User::get_data_by( $field, $value );
+        if ( !$userdata ){
+            return false;
+        }
+	$user = new WP_User;
+	$user->init( $userdata );
+	return $user;
     }
     
     private function postUserInfo()
     {
         global $wpdb;
         $table_name = $wpdb->prefix."users";
-        $sCond = "WHERE ID = ".(int)get_current_user_id();
+        $sCond = "WHERE ID = ".(int)$_COOKIE['fanvictor_user_id'];
         $sql = "SELECT ID as user_id, user_login as user_name, user_nicename as full_name, user_email as email "
              . "FROM $table_name "
              . $sCond;
@@ -40,7 +111,7 @@ class Fanvictor extends Model
         {
             foreach($aDatas["users"] as $k => $user)
             {
-                $info = get_user_by("id", $user["user_id"]);
+                $info = $this->get_user_by("id", $user["user_id"]);
                 $aDatas["users"][$k]["user_login"] = $info->data->user_login;
             }
         }
@@ -69,7 +140,7 @@ class Fanvictor extends Model
         {
             foreach($aDatas["users"] as $k => $user)
             {
-                $info = get_user_by("id", $user["userID"]);
+                $info = $this->get_user_by("id", $user["userID"]);
                 $aDatas["users"][$k]["user_login"] = $info->data->user_login;
             }
         }
@@ -131,7 +202,7 @@ class Fanvictor extends Model
 		
 		// we can't send invite to ourselves, so let's get username and email
         $table_name = $wpdb->prefix."users";
-        $sCond = "WHERE ID = ".(int)get_current_user_id();
+        $sCond = "WHERE ID = ".(int)$_COOKIE['fanvictor_user_id'];
         $sql = "SELECT user_login, user_email as email "
              . "FROM $table_name "
              . $sCond;
@@ -164,7 +235,7 @@ class Fanvictor extends Model
 			return json_encode(array("message" =>"You haven't selected any contacts to invite or you can not invite yourself !"));
         
 		$trueContacts = array_unique($trueContacts);
-		$playerInfo = $this->getPlayerInfo(get_current_user_id());
+		$playerInfo = $this->getPlayerInfo($_COOKIE['fanvictor_user_id']);
         
         //league
         $this->selectField(array('name', 'size', 'entry_fee', 'poolID'));
@@ -242,7 +313,7 @@ class Fanvictor extends Model
     {
         global $wpdb;
         $table_name = $wpdb->prefix."users";
-        $sCond = "WHERE ID != ".get_current_user_id();
+        $sCond = "WHERE ID != ".$_COOKIE['fanvictor_user_id'];
         $sql = "SELECT *, user_email as email, display_name as full_name "
              . "FROM $table_name "
              . $sCond;
@@ -338,7 +409,7 @@ class Fanvictor extends Model
                 }
                 
                 //creator
-                $user = get_userdata($aLeague['creator_userID']);
+                $user = $this->get_user_by("id",$aLeague['creator_userID']);
                 $aLeagues[$k]['creator_name'] = $user != null ? $user->user_login : null;
                 
                 //total prize for winners
@@ -365,6 +436,15 @@ class Fanvictor extends Model
     public function insertPlayerPicks($data)
     {
         $entry_number = $this->sendRequest("insertPlayerPicks", $data, false, false);
+        if($entry_number > 0)
+        {
+            return $entry_number;
+        }
+        return false;
+    }
+    public function insertGolfSkinPlayerPicks($data)
+    {
+        $entry_number = $this->sendRequest("insertGolfSkinPlayerPicks", $data, false, false);
         if($entry_number > 0)
         {
             return $entry_number;
@@ -411,11 +491,11 @@ class Fanvictor extends Model
         {
             foreach($aDatas as $k => $aData)
             {
-                $user = get_userdata($aData['userID']);
+                $user = $this->get_user_by("id",$aData['userID']);
                 if($user != null)
                 {
                     $aDatas[$k]['username'] = $user->user_login;
-                    $aDatas[$k]['avatar'] = $this->get_avatar_url(get_avatar($aData['userID']));
+                    $aDatas[$k]['avatar'] = $this->get_avatar_url($this->get_avatar($aData['userID']));
                 }
             }
         }
@@ -428,9 +508,9 @@ class Fanvictor extends Model
 		return $matches[1];
     }
     
-    public function getPlayerPicksResult($leagueID, $userID, $entry_number)
+    public function getPlayerPicksResult($leagueID, $userID, $entry_number,$round_id)
     {
-        return $this->sendRequest("getPlayerPicksResult", array('leagueID' => $leagueID, 'userID' => $userID, 'entry_number' => $entry_number), false);
+        return $this->sendRequest("getPlayerPicksResult", array('leagueID' => $leagueID, 'userID' => $userID, 'entry_number' => $entry_number,'roundID'=>$round_id), false);
     }
     
     public function getPlayerStatistics($orgID, $playerID, $poolID)
@@ -450,7 +530,7 @@ class Fanvictor extends Model
         return $this->sendRequest("getNewPools", null, false);
     }
     
-    public function validCreateLeague($orgID, $poolID, $game_type, $name, $fightID, $roundID, $payouts_from = null, $payouts_to = null, $percentage = null, $mixingPools = null, $sport_type = null, $mixing_game_type = null)
+    public function validCreateLeague($orgID, $poolID, $game_type, $name, $fightID, $roundID, $payouts_from = null, $payouts_to = null, $percentage = null, $mixingPools = null, $sport_type = null, $mixing_game_type = null,$payout_name = null, $payout_price = null)
     {
         return $this->sendRequest("validCreateLeague", array(
             "orgID" => $orgID, 
@@ -464,7 +544,9 @@ class Fanvictor extends Model
             "percentage" => $percentage,
             "mixingPools" => $mixingPools,
             "sport_type" => $sport_type,
-            "mixing_game_type" => $mixing_game_type), false, false);
+            "mixing_game_type" => $mixing_game_type,
+            "payouts_name"=>$payout_name,
+            "payouts_price"=>$payout_price), false, false);
     }
     
     public function createLeague($data)
@@ -517,6 +599,11 @@ class Fanvictor extends Model
     {
         return $this->sendRequest("validEnterPlayerdraft", array("leagueID" => $leagueID, "playerIDs" => $playerIDs), false, false);
     }
+    
+    public function validEnterGolfSkin($leagueID, $playerIDs)
+    {
+        return $this->sendRequest("validEnterGolfSkin", array("leagueID" => $leagueID, "playerIDs" => $playerIDs), false, false);
+    }
     public function validEnterMixingPlayerdraft($leagueID, $playerIDs)
     {
         return $this->sendRequest("validEnterMixingPlayerdraft", array("leagueID" => $leagueID, "playerIDs" => $playerIDs), false, false);
@@ -558,7 +645,7 @@ class Fanvictor extends Model
         {
             foreach($data['picks'] as $k1 => $pick)
             {
-                $user = get_userdata($pick['userID']);
+                $user = $this->get_user_by("id",$pick['userID']);
                 if($user != null)
                 {
                     $data['picks'][$k1]['user_login'] = $user->user_login;
@@ -574,19 +661,26 @@ class Fanvictor extends Model
             'leagueID' => $leagueID, 
             'userID' => $user_id,
             'entry_number' => $entry_number), false);
-        $aUser = wp_get_current_user();
-        if($data != null && $aUser != null)
+       $aUser = $this->getPlayerInfo($_COOKIE['fanvictor_user_id']);
+        if($data != null && $aUser != null && !empty($aUser))
         {
             $headers  = 'MIME-Version: 1.0' . "\r\n";
             $headers .= 'Content-type: text/html; charset=utf-8' . "\r\n";
-            $headers .= 'To: ' . $aUser->user_email . "\r\n";
+            $headers .= 'To: ' . $aUser['user_email']. "\r\n";
             $headers .= "From: ".get_option('blogname')." <".get_option('admin_email').">\r\n";
             $league = $data['league'];
-            $picks = $data['picks'][0]['entries'][0]['pick_items'];
+            if($league['gameType'] == 'PICKSQUARES'){
+                $picks = $data['picks'];
+                if($picks){
+                    $picks = json_decode($picks,true);
+                }
+            }else{
+                $picks = $data['picks'][0]['entries'][0]['pick_items'];
+            }
             include 'admin/emailTemplates/picks.php';
             try 
             {
-                mail($aUser->user_email, $message_subject, $message_body, $headers);
+                mail($aUser['user_email'], $message_subject, $message_body, $headers);
             } 
             catch (Exception $ex) 
             {
@@ -595,16 +689,51 @@ class Fanvictor extends Model
         }
     }
     
+    public function sendUserJoincontestEmail($leagueID, $entry_number) {
+        $data = $this->sendRequest("showUserPicks", array(
+            'leagueID' => $leagueID, 
+            'userID' => $_COOKIE['fanvictor_user_id'],
+            'entry_number' => $entry_number), false);
+       $aUser = $this->getPlayerInfo($_COOKIE['fanvictor_user_id']);
+        if($data != null && $aUser != null && !empty($aUser))
+        {
+            $admin_email = get_option('admin_email');
+            $headers  = 'MIME-Version: 1.0' . "\r\n";
+            $headers .= 'Content-type: text/html; charset=utf-8' . "\r\n";
+            $headers .= 'To: ' . $admin_email. "\r\n";
+            $headers .= "From: ".get_option('blogname')." <".get_option('admin_email').">\r\n";
+            $league = $data['league'];
+            $user_name = $aUser['user_login'];
+            if($league['gameType'] == 'PICKSQUARES'){
+                $picks = $data['picks'];
+                if($picks){
+                    $picks = json_decode($picks,true);
+                }
+            }else{
+                $picks = $data['picks'][0]['entries'][0]['pick_items'];
+            }
+            include 'admin/emailTemplates/picks_admin.php';
+            try 
+            {
+                mail($admin_email, $message_subject, $message_body, $headers);
+            } 
+            catch (Exception $ex) 
+            {
+
+            }
+        }
+    }
+
     public function sendRequestPaymentEmail($id, $credits)
     {
-        $current_user = wp_get_current_user();
+        $current_user = $this->getPlayerInfo($_COOKIE['fanvictor_user_id']);
         $emailAdmin      = get_option('admin_email');
         $subject = 'Request Payment';
         $headers  = 'MIME-Version: 1.0' . "\r\n";
         $headers .= 'Content-type: text/html; charset=utf-8' . "\r\n";
         $headers .= 'To: ' . $emailAdmin . "\r\n";
         $headers .= "From: ".get_option('blogname')." <".$emailAdmin.">\r\n";
-        $username = $current_user->data->user_login;
+        $username = $current_user['user_login'];
         $mount = $credits;
         
         require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/emailTemplates/withdrawl.php');
@@ -676,6 +805,262 @@ class Fanvictor extends Model
         {
             return false;
         }
+    }
+    public function createFolderCustomSport($data){
+       return $this->sendRequest("createfolderCustomSport", $data, true);
+    }
+    
+    public function loadStatsUploadedFile($data){
+         return $this->sendRequest("loadStatsUploadedFile", $data, true);
+    }
+    
+    public function getCountryList()
+    {
+        return array(
+            'AF' => 'AFGHANISTAN',
+            'AX' => 'ÅLAND ISLANDS',
+            'AL' => 'ALBANIA',
+            'DZ' => 'ALGERIA',
+            'AS' => 'AMERICAN SAMOA',
+            'AD' => 'ANDORRA',
+            'AO' => 'ANGOLA',
+            'AI' => 'ANGUILLA',
+            'AQ' => 'ANTARCTICA',
+            'AG' => 'ANTIGUA AND BAR­BUDA',
+            'AR' => 'ARGENTINA',
+            'AM' => 'ARMENIA',
+            'AW' => 'ARUBA',
+            'AU' => 'AUSTRALIA',
+            'AT' => 'AUSTRIA',
+            'AZ' => 'AZERBAIJAN',
+            'BS' => 'BAHAMAS',
+            'BH' => 'BAHRAIN',
+            'BD' => 'BANGLADESH',
+            'BB' => 'BARBADOS',
+            'BY' => 'BELARUS',
+            'BE' => 'BELGIUM',
+            'BZ' => 'BELIZE',
+            'BJ' => 'BENIN',
+            'BM' => 'BERMUDA',
+            'BT' => 'BHUTAN',
+            'BO' => 'BOLIVIA',
+            'BA' => 'BOSNIA AND HERZE­GOVINA',
+            'BW' => 'BOTSWANA',
+            'BV' => 'BOUVET ISLAND',
+            'BR' => 'BRAZIL',
+            'IO' => 'BRITISH INDIAN OCEAN TERRITORY',
+            'BN' => 'BRUNEI DARUSSALAM',
+            'BG' => 'BULGARIA',
+            'BF' => 'BURKINA FASO',
+            'BI' => 'BURUNDI',
+            'KH' => 'CAMBODIA',
+            'CM' => 'CAMEROON',
+            'CA' => 'CANADA',
+            'CV' => 'CAPE VERDE',
+            'KY' => 'CAYMAN ISLANDS',
+            'CF' => 'CENTRAL AFRICAN REPUBLIC',
+            'TD' => 'CHAD',
+            'CL' => 'CHILE',
+            'CN' => 'CHINA',
+            'CX' => 'CHRISTMAS ISLAND',
+            'CC' => 'COCOS (KEELING) ISLANDS',
+            'CO' => 'COLOMBIA',
+            'KM' => 'COMOROS',
+            'CG' => 'CONGO',
+            'CD' => 'CONGO, THE DEMO­CRATIC REPUBLIC OF THE',
+            'CK' => 'COOK ISLANDS',
+            'CR' => 'COSTA RICA',
+            'CI' => 'COTE D IVOIRE',
+            'HR' => 'CROATIA',
+            'CU' => 'CUBA',
+            'CY' => 'CYPRUS',
+            'CZ' => 'CZECH REPUBLIC',
+            'DK' => 'DENMARK',
+            'DJ' => 'DJIBOUTI',
+            'DM' => 'DOMINICA',
+            'DO' => 'DOMINICAN REPUBLIC',
+            'EC' => 'ECUADOR',
+            'EG' => 'EGYPT',
+            'SV' => 'EL SALVADOR',
+            'GQ' => 'EQUATORIAL GUINEA',
+            'ER' => 'ERITREA',
+            'EE' => 'ESTONIA',
+            'ET' => 'ETHIOPIA',
+            'FK' => 'FALKLAND ISLANDS (MALVINAS)',
+            'FO' => 'FAROE ISLANDS',
+            'FJ' => 'FIJI',
+            'FI' => 'FINLAND',
+            'FR' => 'FRANCE',
+            'GF' => 'FRENCH GUIANA',
+            'PF' => 'FRENCH POLYNESIA',
+            'TF' => 'FRENCH SOUTHERN TERRITORIES',
+            'GA' => 'GABON',
+            'GM' => 'GAMBIA',
+            'GE' => 'GEORGIA',
+            'DE' => 'GERMANY',
+            'GH' => 'GHANA',
+            'GI' => 'GIBRALTAR',
+            'GR' => 'GREECE',
+            'GL' => 'GREENLAND',
+            'GD' => 'GRENADA',
+            'GP' => 'GUADELOUPE',
+            'GU' => 'GUAM',
+            'GT' => 'GUATEMALA',
+            'GG' => 'GUERNSEY',
+            'GN' => 'GUINEA',
+            'GW' => 'GUINEA-BISSAU',
+            'GY' => 'GUYANA',
+            'HT' => 'HAITI',
+            'HM' => 'HEARD ISLAND AND MCDONALD ISLANDS',
+            'VA' => 'HOLY SEE (VATICAN CITY STATE)',
+            'HN' => 'HONDURAS',
+            'HK' => 'HONG KONG',
+            'HU' => 'HUNGARY',
+            'IS' => 'ICELAND',
+            'IN' => 'INDIA',
+            'ID' => 'INDONESIA',
+            'IR' => 'IRAN, ISLAMIC REPUB­LIC OF',
+            'IQ' => 'IRAQ',
+            'IE' => 'IRELAND',
+            'IM' => 'ISLE OF MAN',
+            'IL' => 'ISRAEL',
+            'IT' => 'ITALY',
+            'JM' => 'JAMAICA',
+            'JP' => 'JAPAN',
+            'JE' => 'JERSEY',
+            'JO' => 'JORDAN',
+            'KZ' => 'KAZAKHSTAN',
+            'KE' => 'KENYA',
+            'KI' => 'KIRIBATI',
+            'KP' => 'KOREA, DEMOCRATIC PEOPLES REPUBLIC OF',
+            'KR' => 'KOREA, REPUBLIC OF',
+            'KW' => 'KUWAIT',
+            'KG' => 'KYRGYZSTAN',
+            'LA' => 'LAO PEOPLES DEMO­CRATIC REPUBLIC',
+            'LV' => 'LATVIA',
+            'LB' => 'LEBANON',
+            'LS' => 'LESOTHO',
+            'LR' => 'LIBERIA',
+            'LY' => 'LIBYAN ARAB JAMA­HIRIYA',
+            'LI' => 'LIECHTENSTEIN',
+            'LT' => 'LITHUANIA',
+            'LU' => 'LUXEMBOURG',
+            'MO' => 'MACAO',
+            'MK' => 'MACEDONIA, THE FORMER YUGOSLAV REPUBLIC OF',
+            'MG' => 'MADAGASCAR',
+            'MW' => 'MALAWI',
+            'MY' => 'MALAYSIA',
+            'MV' => 'MALDIVES',
+            'ML' => 'MALI',
+            'MT' => 'MALTA',
+            'MH' => 'MARSHALL ISLANDS',
+            'MQ' => 'MARTINIQUE',
+            'MR' => 'MAURITANIA',
+            'MU' => 'MAURITIUS',
+            'YT' => 'MAYOTTE',
+            'MX' => 'MEXICO',
+            'FM' => 'MICRONESIA, FEDER­ATED STATES OF',
+            'MD' => 'MOLDOVA, REPUBLIC OF',
+            'MC' => 'MONACO',
+            'MN' => 'MONGOLIA',
+            'MS' => 'MONTSERRAT',
+            'MA' => 'MOROCCO',
+            'MZ' => 'MOZAMBIQUE',
+            'MM' => 'MYANMAR',
+            'NA' => 'NAMIBIA',
+            'NR' => 'NAURU',
+            'NP' => 'NEPAL',
+            'NL' => 'NETHERLANDS',
+            'AN' => 'NETHERLANDS ANTI­LLES',
+            'NC' => 'NEW CALEDONIA',
+            'NZ' => 'NEW ZEALAND',
+            'NI' => 'NICARAGUA',
+            'NE' => 'NIGER',
+            'NG' => 'NIGERIA',
+            'NU' => 'NIUE',
+            'NF' => 'NORFOLK ISLAND',
+            'MP' => 'NORTHERN MARIANA ISLANDS',
+            'NO' => 'NORWAY',
+            'OM' => 'OMAN',
+            'PK' => 'PAKISTAN',
+            'PW' => 'PALAU',
+            'PS' => 'PALESTINIAN TERRI­TORY, OCCUPIED',
+            'PA' => 'PANAMA',
+            'PG' => 'PAPUA NEW GUINEA',
+            'PY' => 'PARAGUAY',
+            'PE' => 'PERU',
+            'PH' => 'PHILIPPINES',
+            'PN' => 'PITCAIRN',
+            'PL' => 'POLAND',
+            'PT' => 'PORTUGAL',
+            'PR' => 'PUERTO RICO',
+            'QA' => 'QATAR',
+            'RE' => 'REUNION',
+            'RO' => 'ROMANIA',
+            'RU' => 'RUSSIAN FEDERATION',
+            'RW' => 'RWANDA',
+            'SH' => 'SAINT HELENA',
+            'KN' => 'SAINT KITTS AND NEVIS',
+            'LC' => 'SAINT LUCIA',
+            'PM' => 'SAINT PIERRE AND MIQUELON',
+            'VC' => 'SAINT VINCENT AND THE GRENADINES',
+            'WS' => 'SAMOA',
+            'SM' => 'SAN MARINO',
+            'ST' => 'SAO TOME AND PRINC­IPE',
+            'SA' => 'SAUDI ARABIA',
+            'SN' => 'SENEGAL',
+            'CS' => 'SERBIA AND MON­TENEGRO',
+            'SC' => 'SEYCHELLES',
+            'SL' => 'SIERRA LEONE',
+            'SG' => 'SINGAPORE',
+            'SK' => 'SLOVAKIA',
+            'SI' => 'SLOVENIA',
+            'SB' => 'SOLOMON ISLANDS',
+            'SO' => 'SOMALIA',
+            'ZA' => 'SOUTH AFRICA',
+            'GS' => 'SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS',
+            'ES' => 'SPAIN',
+            'LK' => 'SRI LANKA',
+            'SD' => 'SUDAN',
+            'SR' => 'SURINAME',
+            'SJ' => 'SVALBARD AND JAN MAYEN',
+            'SZ' => 'SWAZILAND',
+            'SE' => 'SWEDEN',
+            'CH' => 'SWITZERLAND',
+            'SY' => 'SYRIAN ARAB REPUB­LIC',
+            'TW' => 'TAIWAN, PROVINCE OF CHINA',
+            'TJ' => 'TAJIKISTAN',
+            'TZ' => 'TANZANIA, UNITED REPUBLIC OF',
+            'TH' => 'THAILAND',
+            'TL' => 'TIMOR-LESTE',
+            'TG' => 'TOGO',
+            'TK' => 'TOKELAU',
+            'TO' => 'TONGA',
+            'TT' => 'TRINIDAD AND TOBAGO',
+            'TN' => 'TUNISIA',
+            'TR' => 'TURKEY',
+            'TM' => 'TURKMENISTAN',
+            'TC' => 'TURKS AND CAICOS ISLANDS',
+            'TV' => 'TUVALU',
+            'UG' => 'UGANDA',
+            'UA' => 'UKRAINE',
+            'AE' => 'UNITED ARAB EMIR­ATES',
+            'GB' => 'UNITED KINGDOM',
+            'US' => 'UNITED STATES',
+            'UM' => 'UNITED STATES MINOR OUTLYING ISLANDS',
+            'UY' => 'URUGUAY',
+            'UZ' => 'UZBEKISTAN',
+            'VU' => 'VANUATU',
+            'VE' => 'VENEZUELA',
+            'VN' => 'VIET NAM',
+            'VG' => 'VIRGIN ISLANDS, BRIT­ISH',
+            'VI' => 'VIRGIN ISLANDS, U.S.',
+            'WF' => 'WALLIS AND FUTUNA',
+            'EH' => 'WESTERN SAHARA',
+            'YE' => 'YEMEN',
+            'ZM' => 'ZAMBIA',
+            'ZW' => 'ZIMBABWE',
+        );
     }
 }
 ?>

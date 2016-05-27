@@ -337,15 +337,9 @@ jQuery.fight =
             }
         });
         
-        var data = {
-            action: 'viewPlayerDraftResult',
-            iPoolID: iPoolID,
-        };
-        jQuery.post(ajaxurl, data, function(result){
-            result = jQuery.parseJSON(result);
-            jQuery.fight.loadPlayerDraftResult(result.pool, result.fights, result.rounds);
-            jQuery.fight.loadPlayerPoints(result.scoring_cat, 1);
-            jQuery("#resultDialog").dialog({
+        var sbHtml = '<select class="select_type_load_'+iPoolID+'" style="margin-bottom:10px;" onchange="jQuery.fight.selectTypeLoad('+iPoolID+')"><option value="0">Upload File</option><option value="1">Load Result</option></select>';
+        jQuery("#resultDialog").empty().append(sbHtml);
+        jQuery("#resultDialog").dialog({
                 buttons: {
                     "Add": function() {
                         jQuery.fight.updatePlayerDraftResult();
@@ -355,10 +349,147 @@ jQuery.fight =
                     }
                 }
             });
-        });
+            jQuery.fight.selectTypeLoad(iPoolID);
         return false;
     },
+    selectTypeLoad: function(poolID){
+        var iLimit = 10;
+        var Ipage = 1;
+        if(jQuery('.select_type_load_'+poolID).val() == '0'){ // poolID
+            jQuery('#formResult').remove();
+            jQuery('#resultMessage').remove();
+            jQuery.fight.loadUploadFileStats(poolID);
+            jQuery('.ui-dialog-buttonset').hide();
+            // show stats for upload file + pagination
+            jQuery.fight.loadStatsUploadedFile(poolID,iLimit,Ipage);   
+        }else{
+            jQuery('.ui-dialog-buttonset').show();
+            jQuery('.place_upload_file').remove();
+            jQuery.fight.loadDataResult(poolID);
+        }
+    },
+    loadDataResult: function(poolID){
+        var data = {
+            action: 'viewPlayerDraftResult',
+            iPoolID: poolID
+        };
+        jQuery.post(ajaxurl, data, function(result){
+            result = jQuery.parseJSON(result);
+            jQuery.fight.loadPlayerDraftResult(result.pool, result.fights, result.rounds);
+            jQuery.fight.loadPlayerPoints(result.scoring_cat, 1);
+
+        });
+    }
+    ,
+    loadUploadFileStats: function(poolID){
+
+        var info = jQuery('#info_upload_'+poolID).val();
+        info = jQuery.parseJSON(info);
+        var html = '<div class="place_upload_file"><input type="file" name="file_content_'+poolID+'" id="file_content_'+poolID+'"><button onclick="jQuery.fight.uploadFileStats('+poolID+')">Upload</button><a style="margin-left:10px;"  href="'+linkFileSample+'"> File Sample</a>';
+            html+= '<div class="message_upload_'+poolID+'"></div>';
+            html+='<div class="file_upload_name">'+info.uploaded_file+'</div>';
+            html+='<div class="content_stats_file"></div>';
+            html+='</div>';
+
+             jQuery('#resultDialog').append(html);
+
+    },
+    uploadFileStats: function(poolID){
+        var info_upload = JSON.parse(jQuery('#info_upload_'+poolID).val());
+        var file_data = jQuery("#file_content_"+poolID).prop("files")[0];
+        var form_data = new FormData(); 
+        form_data.append("file", file_data); 
+        form_data.append("org_id", info_upload.org_id); 
+        form_data.append("poolID", poolID); 
+        form_data.append('action','sendUploadedFileStats');
+        jQuery.ajax({
+                url: ajaxurl,
+                dataType: 'json',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,                         // Setting the data attribute of ajax with file_data
+                type: 'post',
+                success: function(data){
+                    switch(data.result){
+                        case "0":
+                            jQuery('.message_upload_'+poolID).html('Please select file upload');
+                            break;
+                        case "1":
+                            jQuery('.message_upload_'+poolID).html('Upload failed');
+                            break;    
+                        case "2":
+                            jQuery('.message_upload_'+poolID).html('File type must be csv');
+                            break;    
+                        case "3":
+                            jQuery('.message_upload_'+poolID).html('Upload successfully');
+
+                                      info_upload.uploaded_file = file_data.name;
+                                      jQuery('#info_upload_'+poolID).val(JSON.stringify(info_upload));
+                                      
+                            break;
+                    }
+                }
+       });
+    }
+    ,
+    loadStatsUploadedFile: function(poolID,limit,page){
+       var info = jQuery('#info_upload_'+poolID).val();
+            info = jQuery.parseJSON(info);
+            if(info.uploaded_file == ''){
+                return;
+            }
+       var data = 'action=loadStatsUploadedFile&'+'poolID='+poolID+'&org_id='+info.org_id+'&iLimit='+limit +'&iPage='+page;
+       jQuery.post(ajaxurl, data, function(result){
+            result = jQuery.parseJSON(result);
+           if(result != null && result.data.length > 0 && Object.keys(result.titles).length > 0){
+               var contentTh = '';
+               var aTitles = result.titles;
+               var content = '';
+               for(var i in aTitles){
+                   contentTh+='<th>'+aTitles[i]+'</th>';
+               }
+               var aStats = result.data;
+               for(var i in aStats){
+                   var aStatsPlayer = aStats[i];
+                   content+='<tr>';
+                   for(var j in aStatsPlayer){
+                       content+='<td>'+aStatsPlayer[j]+'</td>';
+                   }
+                   content+='</tr>';
+               }
+               var htmlContent = '<table class="tbl_show_stats" style="min-width:500px;" cellspacing="10" cellpadding="2">'+contentTh+content+'</table>';
+               jQuery(".content_stats_file").empty().append(htmlContent);
+               // pagination
+               if(result.pages > 1){
+                   var prev_page = 1;
+                   if(page > 1){
+                       prev_page = page - 1;
+                   }
+                   var htmlContent = '<div class="tablenav bottom">';
+                        htmlContent += '<div class="alignleft actions bulkactions"></div>';
+                        htmlContent += '<div class="tablenav-pages">';
+                            htmlContent += '<span class="pagination-links">';
+                                htmlContent +='<a class="first-page" href="#/prototype" onclick="jQuery.fight.loadStatsUploadedFile('+poolID+','+limit+','+1+');"><span class="screen-reader-text">First page</span><span aria-hidden="true">«</span></a>';
+                                htmlContent +='<a class="prev-page" href="#/" onclick="jQuery.fight.loadStatsUploadedFile('+poolID+','+limit+','+prev_page+');"><span class="screen-reader-text">Previous page</span><span aria-hidden="true">‹</span></a>';
+                                htmlContent += '<span class="screen-reader-text">Current Page</span>';
+                                htmlContent += '<span id="table-paging" class="paging-input">'+page+' of <span class="total-pages">'+result.pages+'</span></span>';
+                                htmlContent += '<a class="next-page" href="#/" onclick="jQuery.fight.loadStatsUploadedFile('+poolID+','+limit+','+(page+1)+');"><span class="screen-reader-text">Next page</span><span aria-hidden="true">›</span></a>';
+                                htmlContent += '<a class="next-page" href="#/" onclick="jQuery.fight.loadStatsUploadedFile('+poolID+','+limit+','+result.pages+');"><span class="screen-reader-text">Next page</span><span aria-hidden="true">»</span></a>';
+                            htmlContent += '</span>';
+                        htmlContent += '</div>';
+                   htmlContent += '</div>';
+                   jQuery(".content_stats_file").append(htmlContent);
+               }
+               
+               
+           }else{
+               
+           }
+        });
     
+    }
+    ,
     loadPlayerDraftResult: function(aPool, aFights, aRounds)
     {
         this.aFights = aFights;
@@ -437,8 +568,8 @@ jQuery.fight =
                     </div>';
         }
        
-        
-        jQuery("#resultDialog").empty().append(html);
+       
+        jQuery("#resultDialog").append(html);
     },
     
     loadPlayersResult: function()
@@ -563,7 +694,7 @@ jQuery.fight =
         var data = 'action=updatePlayerDraftResult&' + jQuery('#formResult').serialize();
         jQuery.post(ajaxurl, data, function(result){
             alert(result);
-        })
+        });
     },
     
     reverseResult: function(poolID, oObj)
@@ -587,7 +718,7 @@ jQuery.fight =
                     jQuery(oObj).closest('tr').find('.column-playerdraft_result a').show();
                     jQuery(oObj).closest('tr').find('.column-edit a').show();
                 }
-            })
+            });
         }
     }
 }
@@ -598,4 +729,4 @@ jQuery(document).on('click', '#resultScoring .page-numbers:not(current)', functi
     var href = jQuery(this).attr('href');
     var page = href.split('?paged=');
     jQuery.fight.loadPlayerPoints(null, page[1]);
-})
+});

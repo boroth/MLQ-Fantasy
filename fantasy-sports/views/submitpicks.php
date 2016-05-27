@@ -52,7 +52,7 @@
         </div>
     </div>
     
-    <?php if($otherLeagues != null):?>
+    <?php if($otherLeagues != null && get_option('fanvictor_show_import_pick') == 1):?>
     <p><?php echo __('Below is a list of games you have already entered for this event. Simply click on \'Import Picks\' to import your picks from that game.', FV_DOMAIN)?></p>
     <table width="100%" cellspacing="0" cellpadding="0" border="0" class="table table-striped table-bordered">
         <thead>
@@ -156,7 +156,7 @@
                 <?php endforeach;?>
             </tbody>
         </table>
-    <?php else:?>
+    <?php elseif($aLeague['gameType'] != 'PICKEM'):?>
         <table border="0" class="table table-striped table-bordered table-responsive table-condensed">
             <tbody>
                 <?php foreach($aFights as $aFight):?>
@@ -223,7 +223,87 @@
                 <?php endforeach;?>
             </tbody>
         </table>
-    <?php endif;?>
+    <?php elseif($aLeague['gameType'] == 'PICKEM'): ?>
+    <table border="0" class="table table-striped table-bordered table-responsive table-condensed">
+            <tbody>
+                <?php foreach($aFights as $aFight):?>
+                <?php if($aLeague['allow_tie']): ?>
+                <tr>
+                    <td style="border: none !important;"></td>
+                    <td style="text-align:center;vertical-align: middle;border: none;">   <br><?php echo $aFight['startDate'];?></td>
+                    <td style="border: none"></td>
+                </tr>
+                <?php endif; ?>
+                <tr>
+                    <td style="text-align:center;width:30%">
+                        <?php echo $aFight['allow_spread'] ? $aFight['team1_spread_points'] : '';?>
+                        <?php echo $aFight['allow_moneyline'] ? $aFight['team1_moneyline'] : '';?>
+                        <br><?php echo $aFight['name1'];?>
+                        <br>&nbsp;
+                        <input type="radio" class="fightID" value="<?php echo $aFight['fighterID1'];?>" name="winner<?php echo $aFight['fightID'];?>" data-fightid="<?php echo $aFight['fightID'];?>" <?php if($aFight['winnerID'] == $aFight['fighterID1']):?>checked="checked"<?php endif;?> <?php if($aFight['started'] == 1):?>disabled="true"<?php endif;?>>
+                    </td>
+                    <td style="text-align:center;vertical-align: middle">
+                        <?php echo $aFight['allow_spread'] ? __('Spread').'<br><br>' : '';?>
+                        <?php echo $aFight['allow_moneyline'] ? __('Money Line').'<br><br>' : '';?>
+                        <?php if($aLeague['allow_tie']): ?>
+                        <br><?php echo __('Draw') ?>
+                        <br><input type="radio" class="fightID" value="0" name="winner<?php echo $aFight['fightID'];?>" data-fightid="<?php echo $aFight['fightID'];?>" <?php if($aFight['winnerID'] ===0):?>checked="checked"<?php endif;?> <?php if($aFight['started'] == 1):?>disabled="true"<?php endif;?>>
+                        <?php else: ?>
+                        <br> VS
+                         <br><?php echo $aFight['startDate'];?>
+                        <?php endif; ?>
+                    </td>
+                    <td style="text-align:center;width:30%">
+                        <?php echo $aFight['allow_spread'] ? $aFight['team2_spread_points'] : '';?>
+                        <?php echo $aFight['allow_moneyline'] ? $aFight['team2_moneyline'] : '';?>
+                        <br><?php echo $aFight['name2'];?>
+                        <br>&nbsp;
+                        <input type="radio" class="fightID" value="<?php echo $aFight['fighterID2'];?>" name="winner<?php echo $aFight['fightID'];?>" data-fightid="<?php echo $aFight['fightID'];?>" <?php if($aFight['winnerID'] == $aFight['fighterID2']):?>checked="checked"<?php endif;?> <?php if($aFight['started'] == 1):?>disabled="true"<?php endif;?>>
+                    </td>
+                    <?php if($aMethods != null):?>
+                    <td style="text-align:center;vertical-align: middle">
+                        <?php if($aMethods != null):?>
+                            <select onchange="checkMethod(this.value,<?php echo $aFight['fightID'];?>)" class="method" data-id="<?php echo $aFight['fightID'];?>" id="method<?php echo $aFight['fightID'];?>" name="method<?php echo $aFight['fightID'];?>" style="width:205px" <?php if($aFight['started'] == 1):?>disabled="true"<?php endif;?>>
+                                <option value="-1">-- Select Method --</option>
+                                <?php foreach($aMethods as $aMethod):?>
+                                <option value="<?php echo $aMethod["methodID"];?>" <?php if($aFight['methodID'] == $aMethod["methodID"]):?>selected="true"<?php endif;?>>
+                                    <?php echo $aMethod["description"];?>
+                                </option>
+                                <?php endforeach;?>
+                            </select>
+                        <?php endif;?>
+                        <?php if($aRounds != null):?>
+                            <br>
+                            <br>
+                            <select id="round<?php echo $aFight['fightID'];?>" name="round<?php echo $aFight['fightID'];?>" style="width:205px" <?php if($aFight['started'] == 1):?>disabled="true"<?php endif;?>>
+                                <option value="-1">-- Select Round --</option>
+                                <?php foreach($aRounds as $aRound):?>
+                                <option value="<?php echo $aRound;?>" <?php if($aFight['roundID'] == $aRound):?>selected="true"<?php endif;?>>
+                                    <?php echo $aRound;?>
+                                </option>
+                                <?php endforeach;?>
+                            </select>
+                        <?php endif;?>
+                        <?php if($aMinutes != null):?>
+                            <br>
+                            <br>
+                            <select onchange="checkMinute(this.value,<?php echo $aFight['fightID'];?>)" class="minute" data-id="<?php echo $aFight['fightID'];?>" id="minute<?php echo $aFight['fightID'];?>" name="minute<?php echo $aFight['fightID'];?>" style="width:205px" <?php if($aFight['started'] == 1):?>disabled="true"<?php endif;?>>
+                                <option value="-1">-- Select Minute --</option>
+                                <?php foreach($aMinutes as $aMinute):?>
+                                <option value="<?php echo $aMinute["minuteID"];?>" <?php if($aFight['minuteID'] == $aMinute["minuteID"]):?>selected="true"<?php endif;?>>
+                                    <?php echo $aMinute["description"];?>
+                                </option>
+                                <?php endforeach;?>
+                            </select>
+                        <?php endif;?>
+                    </td>
+                    <?php endif;?>
+                </tr>
+                <?php endforeach;?>
+            </tbody>
+        </table>
+    
+            <?php endif;?>
 	<?php if(strtolower($aLeague['gameType']) == 'picktie'):?> 
         <?php echo __("Predict point total");?>
         <input type="text" name="predict_point" value="<?php echo $aFights[0]['predict_point'];?>"/>

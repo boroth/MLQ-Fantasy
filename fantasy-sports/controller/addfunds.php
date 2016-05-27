@@ -44,6 +44,7 @@ class Addfunds
         }
         $isHasCoupon = self::$coupon->isHasCoupon(CP_ACTION_EXTRA_DEPOSIT);
         $fee_percentage = (int)get_option('fanvictor_fee_percentage');
+        $country_list = self::$fanvictor->getCountryList();
         include FANVICTOR__PLUGIN_DIR_VIEW.'addfunds.php';
     }
 }

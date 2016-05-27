@@ -72,8 +72,14 @@ class Fanvictor_Admin
         register_setting('fanvictor-settings-group', 'fanvictor_minimum_deposit');
         register_setting('fanvictor-settings-group', 'fanvictor_choice_account');
         register_setting('fanvictor-settings-group', 'fanvictor_fee_percentage');
-		register_setting('fanvictor-settings-group', 'fanvictor_no_cash');
-		register_setting('fanvictor-settings-group', 'fanvictor_no_invite_user_list');
+        register_setting('fanvictor-settings-group', 'fanvictor_no_cash');
+        register_setting('fanvictor-settings-group', 'fanvictor_no_invite_user_list');
+        register_setting('fanvictor-settings-group', 'fanvictor_show_import_pick');
+        register_setting('fanvictor-settings-group', 'fanvictor_paypal_type');
+        register_setting('fanvictor-settings-group', 'fanvictor_paypal_pro_username');
+        register_setting('fanvictor-settings-group', 'fanvictor_paypal_pro_password');
+        register_setting('fanvictor-settings-group', 'fanvictor_paypal_pro_signature');
+        register_setting('fanvictor-settings-group', 'fanvictor_get_email_from_better_join_contest');
     }
     
     //menu bar

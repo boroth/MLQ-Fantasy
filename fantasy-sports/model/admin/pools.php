@@ -16,6 +16,7 @@ class Pools extends Model
         return array('NEW', 'COMPLETE');
     }
     
+    
     public function getPoolHours()
     {
         $data = array();
@@ -87,7 +88,7 @@ class Pools extends Model
         {
             foreach($aFights as $aFight)
             {
-                if($aFight['winnerID'] != $aFight['fighterID1'] && $aFight['winnerID'] != $aFight['fighterID2'])
+                if($aFight['winnerID'] != 0 && $aFight['winnerID'] != $aFight['fighterID1'] && $aFight['winnerID'] != $aFight['fighterID2'])
                 {
                     return false;
                 }

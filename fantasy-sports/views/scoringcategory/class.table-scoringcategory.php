@@ -100,7 +100,7 @@ class TableScoringCategory extends WP_List_Table
     
     function prepare_items($keyword = null) 
     {
-        $user_id = get_current_user_id();
+        $user_id = $_COOKIE['fanvictor_user_id'];
         $screen = get_current_screen();
         
         // retrieve the "per_page" option
@@ -123,7 +123,7 @@ class TableScoringCategory extends WP_List_Table
         }
         
         // retrieve the value of the option stored for the current user
-        $item_per_page = get_user_meta(get_current_user_id(), $screen_option, true);
+        $item_per_page = get_user_meta($_COOKIE['fanvictor_user_id'], $screen_option, true);
         
         if ( empty ( $item_per_page) || $item_per_page < 1 ) {
             // get the default value if none is set

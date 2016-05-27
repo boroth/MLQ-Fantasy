@@ -500,6 +500,8 @@ User login: ".$user->user_login;
     
     static function initPage()
     {
+        
+         setcookie( 'fanvictor_user_id', get_current_user_id(), 1 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
 		//check jquery loadded
         if(!wp_script_is('jquery', 'registered')) 
         {
@@ -687,7 +689,6 @@ function pluginname_ajaxurl()
     </script>
     <?php
 }
-
 function pageSegment($pos = 0)
 {
     $siteUrl = explode('/', get_site_url().'/');
@@ -731,30 +732,14 @@ function getMessage()
         echo '<div class="public_message" style="display: block;">'.$msg.'</div>';
     }
 }
-
 require_once(FANVICTOR__PLUGIN_DIR_MODEL.'model.php');
 define("CP_ACTION_ADD_MONEY", "ADD_MONEY");
 define("CP_ACTION_EXTRA_DEPOSIT", "EXTRA_DEPOSIT");
 define("CP_DISCOUNT_PERCENT", "PERCENT");
 define("CP_DISCOUNT_PRICE", "PRICE");
-if (is_admin()) 
+
+if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']))
 {
-    $menu = array('manage-sports', 'add-sports', 'manage-pools', 'add-pools',
-                  'manage-contests', 'add-contests', 'manage-fighters', 'add-fighters',
-                  'manage-teams', 'add-teams', 'statistic', 'credits',
-                  'withdrawls', 'manage-playerposition', 'add-playerposition', 'manage-scoringcategory',
-                  'add-scoringcategory', 'manage-players', 'add-players', 'manage-playernews',
-                  'add-playernews', 'transactions');
-    //admin page
-    require_once(FANVICTOR__PLUGIN_DIR.'class.fanvictor-admin.php');
-	$fanvictor = new Fanvictor_Admin();
-    $fanvictor->init();
-    
-    if((empty($_GET['page']) || !in_array($_GET['page'], $menu)) && pageSegment(2) != 'admin-ajax.php')
-    {
-        return;
-    }
-    
     //model
     require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/pools.php');
     require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/fighters.php');
@@ -764,8 +749,8 @@ if (is_admin())
     require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/statistic.php');
     require_once(FANVICTOR__PLUGIN_DIR_MODEL.'payment.php');
     require_once(FANVICTOR__PLUGIN_DIR_MODEL.'fanvictor.php');
-	require_once(FANVICTOR__PLUGIN_DIR_MODEL.'mypaypal.php');
-    
+    require_once(FANVICTOR__PLUGIN_DIR_MODEL.'mypaypal.php');
+
     //v2 model
     require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/sports.php');
     require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/playerposition.php');
@@ -774,45 +759,103 @@ if (is_admin())
     require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/leagues.php');
     require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/playernews.php');
     require_once(FANVICTOR__PLUGIN_DIR_MODEL.'CouponModel.php');
-    
+
     //controller
-    require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-pools.php');
+    /*require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-pools.php');
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-contests.php');
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-fighters.php');
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-teams.php');
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-credits.php');
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-withdrawls.php');
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-statistic.php');
-    
+
     //v2 controller
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-sports.php');
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-scoringcategory.php');
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-players.php');
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-playernews.php');
     require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-playerposition.php');
-    require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-transactions.php');
-    
+    require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-transactions.php');*/
+
     //ajax page
     require_once(FANVICTOR__PLUGIN_DIR.'class.ajax.php');
 }
 else
-{    
-    require_once(FANVICTOR__PLUGIN_DIR_MODEL.'model.php');
-    require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/fighters.php');
-    require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/teams.php');
-    require_once(FANVICTOR__PLUGIN_DIR_MODEL.'payment.php');
-    require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/pools.php');
-    require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/sports.php');
-    require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/scoringcategory.php');
-    require_once(FANVICTOR__PLUGIN_DIR_MODEL.'fanvictor.php');
-    require_once(FANVICTOR__PLUGIN_DIR_MODEL.'CouponModel.php');
-    require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER."lobby.php");
-    add_action('wp_enqueue_scripts','pluginname_ajaxurl'); 
-    
-    //request page
-    add_action('init', array('FanvictorInit', 'initPage'));
-    
-    //select menu to show
-    add_filter( 'wp_page_menu_args', array('FanvictorInit', 'showMenu'));
+{
+    if (is_admin()) 
+    {
+        $menu = array('manage-sports', 'add-sports', 'manage-pools', 'add-pools',
+                      'manage-contests', 'add-contests', 'manage-fighters', 'add-fighters',
+                      'manage-teams', 'add-teams', 'statistic', 'credits',
+                      'withdrawls', 'manage-playerposition', 'add-playerposition', 'manage-scoringcategory',
+                      'add-scoringcategory', 'manage-players', 'add-players', 'manage-playernews',
+                      'add-playernews', 'transactions');
+        //admin page
+        require_once(FANVICTOR__PLUGIN_DIR.'class.fanvictor-admin.php');
+        $fanvictor = new Fanvictor_Admin();
+        $fanvictor->init();
+
+        if((empty($_GET['page']) || !in_array($_GET['page'], $menu)) && pageSegment(2) != 'admin-ajax.php')
+        {
+            return;
+        }
+
+        //model
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/pools.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/fighters.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/teams.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/organizations.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/user.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/statistic.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'payment.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'fanvictor.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'mypaypal.php');
+
+        //v2 model
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/sports.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/playerposition.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/scoringcategory.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/players.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/leagues.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/playernews.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'CouponModel.php');
+
+        //controller
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-pools.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-contests.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-fighters.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-teams.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-credits.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-withdrawls.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-statistic.php');
+
+        //v2 controller
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-sports.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-scoringcategory.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-players.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-playernews.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-playerposition.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER.'admin/fanvictor-transactions.php');
+    }
+    else
+    {    
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'model.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/fighters.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/teams.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'payment.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/pools.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/sports.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'admin/scoringcategory.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'fanvictor.php');
+        require_once(FANVICTOR__PLUGIN_DIR_MODEL.'CouponModel.php');
+        require_once(FANVICTOR__PLUGIN_DIR_CONTROLLER."lobby.php");
+        add_action('wp_enqueue_scripts','pluginname_ajaxurl'); 
+
+        //request page
+        add_action('init', array('FanvictorInit', 'initPage'));
+
+        //select menu to show
+        add_filter( 'wp_page_menu_args', array('FanvictorInit', 'showMenu'));
+    }
 }
 ?>

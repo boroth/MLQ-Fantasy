@@ -42,6 +42,8 @@ function js_lang()
             "fullpositions2" : "'.__(" positions are filled", "fantasy-sports").'",
             "players_out_team" : "'.__("Are you sure you want to clear all players from your team?", "fantasy-sports").'",
             "player_each_position" : "'.__("Please select a player for each position", "fantasy-sports").'",
+            "golfskin_player_position" : "'.__("Please select at least one player for one round", "fantasy-sports").'",
+            "golfskin_add_balance" : "'.__("Your balance is not enough, Please add more", "fantasy-sports").'",
             "team_exceed_salary_cap" : "'.__("Your team has exceeded this game\'s salary cap. Please change your team so it fits under the salary cap before entering", "fantasy-sports").'",
             "player_no_match" : "'.__("This player has not played any matches yet.", "fantasy-sports").'",
             "pick_a_team" : "'.__("Pick a team of players from the following games", "fantasy-sports").'",

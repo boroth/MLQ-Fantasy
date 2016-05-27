@@ -4,6 +4,9 @@ jQuery(window).load(function(){
         jQuery.playerdraft.mixingLoadPlayers();
     }else{
         jQuery.playerdraft.loadPlayers();
+        if(jQuery("#game_type").val() == 'GOLFSKIN'){
+            jQuery(".f-fixture-picker-button-container .f-is-active").trigger('click');
+        }
     }
     jQuery.playerdraft.calculateAvgPerPlayer();
     jQuery.playerdraft.editLineup();

@@ -1,12 +1,10 @@
 <?php getMessage();?>
-<?php $aSportKeys = array_keys($aSports);?>
-<input type="hidden" id="mixing_orginazation_id" value="<?php echo $aSportKeys[0];  ?>">
-<input type="hidden" id="type_league" value="mixing">
+<input type="hidden" id="type_league" value="single">
 <div class="f-contest-title-date">
     <h1 class="f-contest-title f-heading-styled"><?php echo $league['name'];?></h1>
     <div class="f-contest-date-container">
         <div class="f-contest-date-start-time">
-            <?php echo __('Contest starts', FV_DOMAIN);?> <?php echo date('D M g H:i', strtotime($league['start_date']));?>
+            <?php echo __('Contest starts', FV_DOMAIN);?> <?php echo $aPool['startDate'];?>
         </div>
     </div>
 </div>
@@ -17,20 +15,7 @@
         </b> / <?php echo $league['size'];?>
         <span class="f-entries-player-league"> <?php echo __('player league', FV_DOMAIN);?></span>
     </li>
-    <?php if(get_option('fanvictor_no_cash') == 0):?>
-    <li class="f-contest-entry-fee-container">
-    <?php echo __('Entry fee', FV_DOMAIN);?>
-        <span class="f-entryFee-value amount">$<?php echo $league['entry_fee'];?></span>
-    </li>
-    <li class="f-contest-prize-container  f-gameEntry-inner-entryFeeSelected">
-    <?php echo __('Prizes', FV_DOMAIN);?>
-        <span class="f-content-prize-amount">
-            <a class="f-lightboxPrizeList_show" href="#"  onclick="return jQuery.playerdraft.ruleScoring('<?php echo $league['gameType'];?>', <?php echo $league['leagueID'];?>, '<?php echo htmlentities($league['name']);?>', '<?php echo $league['entry_fee'];?>', '<?php echo $aPool['salary_remaining'];?>', 3)">
-                $<?php echo $league['prizes'];?>
-            </a>
-        </span>
-    </li>
-    <?php endif;?>
+
     <li class="f-contest-rules-link-container">
         <a class="f-lightboxRulesAndScoring_show" onclick="return jQuery.playerdraft.ruleScoring('<?php echo $league['gameType'];?>', <?php echo $league['leagueID'];?>, '<?php echo htmlentities($league['name']);?>', '<?php echo $league['entry_fee'];?>', '<?php echo $aPool['salary_remaining'];?>')" href="#">
             <?php echo __('Rules &amp; Scoring', FV_DOMAIN);?>
@@ -38,77 +23,14 @@
     </li>
 </ul>
 <div class="clear"></div>
-<?php if($otherLeagues != null && get_option( 'fanvictor_show_import_pick' ) == 1):?>
-    <p style="margin: 20px 0 10px;"><?php echo __('Below is a list of games you have already entered for this event. Simply click on \'Import Picks\' to import your picks from that game.', FV_DOMAIN)?></p>
-    <table width="100%" cellspacing="0" cellpadding="0" border="0" class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th><?php echo __('Name', FV_DOMAIN)?></th>
-                <th><?php echo __('Opponent', FV_DOMAIN)?></th>
-                <th><?php echo __('Type', FV_DOMAIN)?></th>
-                <th><?php echo __('Entry Fee', FV_DOMAIN)?></th>
-                <th><?php echo __('Size', FV_DOMAIN)?></th>
-                <th><?php echo __('Structure', FV_DOMAIN)?></th>
-                <th colspan="2">&nbsp;</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach($otherLeagues as $otherLeague):?>
-            <tr>
-                <td>
-                    <div><?php echo $otherLeague['name'];?></div>
-                </td>
-                <td>
-                    <div><?php echo $otherLeague['opponent'];?></div>
-                </td>
-                <td>
-                    <div><?php echo $otherLeague['gameType'];?></div>
-                </td>
-                <td>
-                    <div><?php echo $otherLeague['entry_fee'];?></div>
-                </td>
-                <td>
-                    <div><?php echo $otherLeague['size'];?></div>
-                </td>
-                <td>
-                    <div><?php echo $otherLeague['prize_structure'];?></div>
-                </td>
-                <td colspan="2">
-                    <div>
-                        <input type="button" value="<?php echo __('Import Picks', FV_DOMAIN)?>"  class="btn btn-success" onclick="jQuery.playerdraft.addMultiPlayers('<?php echo $otherLeague['player_id']?>')">
-                    </div>
-                </td>
-            </tr>
-            <?php endforeach;?>
-        </tbody>
-    </table>
-<?php endif;?>
-    <div class="f-pick-your-team">
-    <?php foreach($aAllFights as $index=>$aFights): ?>
-    <section data-role="fixture-picker" class="f-fixture-picker" style="margin-bottom: 5px;">
-        <?php if(!empty($aFights)):?>
-		<h1><?php echo __('Players available from (click to filter):', FV_DOMAIN);?></h1>
-		<div class="f-fixture-picker-button-container">
-               <a class="f-button f-mini fixture-item <?php echo ($index == $aSportKeys[0])?'s-sport-is-active':'' ?>" onclick="jQuery.playerdraft.setActiveFixture(this);jQuery.playerdraft.mixingSelectTypeSport(this,<?php echo $index; ?>, '<?php echo __('Unlimited', FV_DOMAIN);?>','<?php echo __('Add player', FV_DOMAIN);?>')"><?php echo $aSports[$index]; ?></a>           
-	
-            <?php foreach($aFights as $aFight):?>
-            <a data-sport-id="<?php echo $index; ?>" data-team-id1="<?php echo $aFight['fighterID1'];?>" data-team-id2="<?php echo $aFight['fighterID2'];?>" <?php if($aFight['started'] == 0):?>onclick="jQuery.playerdraft.setActiveFixture(this);return jQuery.playerdraft.mixingLoadPlayers(
-                        );"<?php endif;?> class="f-button f-mini fixture-item <?php if($aFight['started'] == 1):?>f-is-disabled<?php endif;?>">
-                <span class="f-fixture-team-home"><?php echo $aFight['nickName1'];?></span>
-                @
-                <span class="f-fixture-team-away"><?php echo $aFight['nickName2'];?></span>
-                <span class="f-fixture-start-time"><?php echo $aFight['startDate'];?></span>
-            </a>
-            <?php endforeach;?>
-        </div>
-        <?php endif;?>
-                
+<div class="f-pick-your-team">
+    <section data-role="fixture-picker" class="f-fixture-picker">
         <?php if(!empty($aRounds)):?>
 		<h1><?php echo __('Players available from (click to filter):', FV_DOMAIN);?></h1>
 		<div class="f-fixture-picker-button-container">
-			<a class="f-button f-mini f-is-active fixture-item" onclick="jQuery.playerdraft.setActiveFixture(this);return jQuery.playerdraft.mixingLoadPlayers();">All</a>
-            <?php foreach($aRounds as $aRound):?>
-            <a class="f-button f-mini fixture-item">
+			<a class="f-button f-mini fixture-item" onclick="return jQuery.playerdraft.loadPlayers();">All</a>
+            <?php foreach($aRounds as $key=>$aRound):?>
+                        <a data-id="<?php echo $aRound['id']; ?>" class="f-button f-mini fixture-item <?php if($key == 0){echo 'f-is-active';} ?>" onclick="jQuery.playerdraft.setActiveFixture(this);return jQuery.playerdraft.selectGolfSkinRounds(this);">
                 <span class="f-fixture-team-home"><?php echo $aRound['name'];?></span>
                 <span class="f-fixture-start-time"><?php echo $aRound['startDate'];?></span>
             </a>
@@ -116,8 +38,6 @@
         </div>
         <?php endif;?>
 	</section>
-    
-    <?php endforeach; ?>
 </div>
 <div class="f-row">
     <section class="f-contest-player-list-container" data-role="player-list">
@@ -125,21 +45,12 @@
             <h1><?php echo __('Available Players', FV_DOMAIN);?></h1>
             <ul class="f-player-list-position-tabs f-tabs f-row">
 		<li>
-                    <a href="" data-id="" class="f-is-active" onclick="jQuery.playerdraft.setActivePosition(this);return jQuery.playerdraft.mixingLoadPlayers();"><?php echo __('All', FV_DOMAIN)?></a>
+                    <a href="" data-id="" class="f-is-active" onclick="jQuery.playerdraft.setActivePosition(this);return jQuery.playerdraft.loadPlayers();"><?php echo __('All', FV_DOMAIN)?></a>
                 </li>
-                <?php if($aPositions != null):?>
-                <?php foreach($aPositions[$aSportKeys[0]] as $aPosition):?>
-                <li>
-                    <a href="" data-id="<?php echo $aPosition['id'];?>" onclick="jQuery.playerdraft.setActivePosition(this);return jQuery.playerdraft.mixingLoadPlayers();">
-                        <?php echo $aPosition['name'];?>
-                    </a>
-                </li>
-                <?php endforeach;?>
-                <?php endif;?>
                 <li class="f-player-search">
-					<label class="f-is-hidden" for="mixing-player-search"><?php echo __('Find a Player', FV_DOMAIN);?></label>
-					<input type="search" id="mixing-player-search" placeholder="<?php echo __('Find a player...', FV_DOMAIN);?>" incremental="" autosave="fd-player-search" results="10">
-		</li>
+					<label class="f-is-hidden" for="player-search"><?php echo __('Find a Player', FV_DOMAIN);?></label>
+					<input type="search" id="player-search" placeholder="<?php echo __('Find a player...', FV_DOMAIN);?>" incremental="" autosave="fd-player-search" results="10">
+				</li>
 			</ul>
             <div data-role="scrollable-header">
 				<table class="f-condensed f-player-list-table-header f-header-fields">
@@ -150,6 +61,7 @@
 								<i class="f-icon f-sorted-asc">▴</i>
 								<i class="f-icon f-sorted-desc">▾</i>
 							</th>
+                            <?php if(!$aPool['only_playerdraft']):?>
 							<th class="f-player-played table-sorting">
 								<i class="f-icon f-sorted-asc">▴</i>
 								<i class="f-icon f-sorted-desc">▾</i>
@@ -160,11 +72,7 @@
 								<i class="f-icon f-sorted-asc">▴</i>
 								<i class="f-icon f-sorted-desc">▾</i>
 							</th>
-							<th class="f-player-salary table-sorting">
-								<i class="f-icon f-sorted-asc">▴</i>
-								<i class="f-icon f-sorted-desc">▾</i>
-								<?php echo __('Salary', FV_DOMAIN);?>
-							</th>
+                            <?php endif;?>
 							<th class="f-player-add"></th>
 						</tr>
 					</thead>
@@ -185,15 +93,14 @@
                             <th class="f-player-fppg">
                                 <?php echo __('FPPG', FV_DOMAIN);?>
                             </th>
+                            <?php if(!$aPool['only_playerdraft']):?>
                             <th class="f-player-played">
                                 <?php echo __('Team', FV_DOMAIN);?>
                             </th>
                             <th class="f-player-fixture">
                                 <?php echo __('Game', FV_DOMAIN);?>
                             </th>
-                            <th class="f-player-salary">
-                                <?php echo __('Salary', FV_DOMAIN);?>
-                            </th>
+                            <?php endif;?>
                             <th class="f-player-add"></th>
                         </tr>
                     </thead>
@@ -205,7 +112,7 @@
                 <div class="f-clear"></div>
                 <div class="f-draft-legend-key-content">
 					<ul>
-                        <?php foreach($aIndicators[$aSportKeys[0]] as $aIndicator):?>
+                        <?php foreach($aIndicators as $aIndicator):?>
                         <?php 
                             $indicatorClass = '';
                             switch($aIndicator['alias'])
@@ -251,56 +158,44 @@
             <div class="f-lineup-text-container">
                 <h1><?php echo __('Your lineup', FV_DOMAIN);?></h1>
                 <p class="f-lineup-lock-message">
-                    <i class="fa fa-lock"></i> <?php echo __('Locks @', FV_DOMAIN);?> <?php echo date('D M g H:i', strtotime($league['start_date']));?>
+                    <i class="fa fa-lock"></i> <?php echo __('Locks @', FV_DOMAIN);?> <?php echo $aPool['startDate'];?>
                     <span class="f-game_status_open"></span>
                 </p>
             </div>
+            <?php if($is_entry_fee): ?>
             <div class="f-salary-remaining">
                 <div class="f-salary-remaining-container">
-                    <span class="f-salary-remaining-amount" id="salaryRemaining">
-                        <?php if($aPool[0]['salary_remaining'] > 0):?> 
-                            $<?php echo number_format($salary_remaining);?>
-                        <?php else:?>
-                            <?php echo __('Unlimited', FV_DOMAIN);?>
-                        <?php endif;?>
-                    </span><?php echo __('Salary Remaining', FV_DOMAIN);?>
-                </div>
-                <div class="f-player-average-container">
-                    <span class="f-player-average-amount" id="AvgPlayer"></span><?php echo __('Avg/Player', FV_DOMAIN);?>
+                    <span id="f-salary"><?php echo $total_money; ?> $</span>
                 </div>
             </div>
+            <?php endif; ?>
         </header>
         <section class="f-roster">
             <ul>
                 <?php if($aLineups != null && is_array($aLineups)):?>
                     <?php foreach($aLineups as $aLineup):?>
-                        <?php foreach($aLineup as $item): ?>
-                            <?php for($i = 0; $i < $item['total']; $i++):?>
-                            <li class="f-roster-position f-count-0 player-position-<?php echo $item['id'];?>" <?php if(isset($aPool['is_round']) && $aPool['is_round'] == 1):?>style="padding-left: 0;background: none;"<?php endif;?>>
-                                <div class="f-player-image" <?php if(isset($aPool['is_round']) && $aPool['is_round'] == 1):?>style="display: none;"<?php endif;?>></div>
-                                <div class="f-position"><?php echo $item['name'];?>
-                                  <span class="f-empty-roster-slot-instruction"><?php echo __('Add player', FV_DOMAIN);?></span>
-                                </div>
-                                <div class="f-player"></div>
-                                <div class="f-salary">$0</div>
-                                <div class="f-fixture"></div>
-                                <a class="f-button f-tiny f-text">
-                                    <i class="fa fa-minus-circle"></i>
-                                </a>
-                            </li>
-                            <?php endfor;?>
-                     <?php endforeach;?>
+                        <?php for($i = 0; $i < $aLineup['total']; $i++):?>
+                        <li class="f-roster-position f-count-0 player-position" <?php if($aPool['is_round'] == 1):?>style="padding-left: 0;background: none;"<?php endif;?>>
+                            <div class="f-player-image" <?php if($aPool['is_round'] == 1):?>style="display: none;"<?php endif;?>></div>
+                            <div class="f-position"><?php echo '';?>
+                                <span class="f-empty-roster-slot-instruction"><?php echo __('Add player', FV_DOMAIN);?></span>
+                            </div>
+                            <div class="f-player"></div>
+                            <a class="f-button f-tiny f-text">
+                                <i class="fa fa-minus-circle"></i>
+                            </a>
+                        </li>
+                        <?php endfor;?>
                     <?php endforeach;?>
                 <?php else:?>  
                     <?php for($i = 0; $i < $aLineups; $i++):?> 
-                        <li class="f-roster-position f-count-0 player-position-0" <?php if($aPool[0]['is_round'] == 1):?>style="padding-left: 0;background: none;"<?php endif;?>>
-                            <div class="f-player-image" <?php if($aPool[0]['is_round'] == 1):?>style="display: none;"<?php endif;?>></div>
+                        <li class="f-roster-position f-count-0 player-position-0" <?php if($aPool['is_round'] == 1):?>style="padding-left: 0;background: none;"<?php endif;?>>
+                            <div class="f-player-image" <?php if($aPool['is_round'] == 1):?>style="display: none;"<?php endif;?>></div>
                             <div class="f-position">
                                 <span class="f-empty-roster-slot-instruction"><?php echo __('Add player', FV_DOMAIN);?></span>
                             </div>
                             <div class="f-player"></div>
-                            <div class="f-salary">$0</div>
-                            <div class="f-fixture"></div>
+                            <div></div>
                             <a class="f-button f-tiny f-text">
                                 <i class="fa fa-minus-circle"></i>
                             </a>
@@ -323,10 +218,14 @@
                     <input type="hidden" value="<?php echo $entry_number;?>" name="entry_number">
                     <input type="hidden" value="<?php echo session_id();?>" name="session_id">
                     <input type="hidden" value="1" name="submitPicks">
+                    <input type="hidden" value="<?php echo $league['gameType']; ?>" name="game_type" id="game_type" >
+                    <input type="hidden" value="0" name="total_money" id="total_money">
+                    <input type="hidden" value='' name="players" id="players">
+                    <input type="hidden" value='<?php echo $league['poolID'] ?>' name="poolID">
                 </form>
             </div>
             <div class="f-contest-enter-button-container">
-                <input type="submit" data-nav-warning="off" id="btnSubmit" value="<?php echo __('Enter', FV_DOMAIN);?>" class="f-button f-jumbo f-primary" onclick="jQuery.playerdraft.submitData()">
+                <input type="submit" data-nav-warning="off" id="btnSubmit" value="<?php echo __('Enter', FV_DOMAIN);?>" class="f-button f-jumbo f-primary" onclick="jQuery.playerdraft.golfSkinSubmitData()">
             </div>
         </footer>
     </section>
@@ -336,7 +235,7 @@
     <?php echo json_encode($aPlayers);?>
 </script>
 <script type="text/template" id="dataSalaryRemaining">
-    <?php echo $salary_remaining;?>
+    <?php echo $aPool['salary_remaining'];?>
 </script>
 <script type="text/template" id="dataPlayerIdPicks">
     <?php echo json_encode($playerIdPicks);?>
@@ -345,7 +244,7 @@
     <?php echo json_encode($league);?>
 </script>
 <script type="text/template" id="dataFights">
-    <?php echo json_encode($aAllFights);?>
+    <?php echo json_encode($aFights);?>
 </script>
 <script type="text/template" id="dataPool">
     <?php echo json_encode($aPool);?>
@@ -353,12 +252,21 @@
 <script type="text/template" id="dataIndicators">
     <?php echo json_encode($aIndicators);?>
 </script>
-<script type="text/template" id="dataLineups">
-    <?php echo json_encode($aLineups);?>
+<script type="text/template" id="dataBalance">
+    <?php echo $balance;?>
 </script>
-<script type="text/template" id="dataPositions">
-    <?php echo json_encode($aPositions);?>
+<script type="text/template" id="dataPlayerGolfSkin">
+    <?php echo $aPlayerGolfSkin;?>
+</script>
+<script type="text/template" id="dataTotalMoney">
+    <?php echo $total_money;?>
+</script>
+<script type="text/template" id="dataentryFee">
+    <?php echo $entry_fee;?>
+</script>
+<script type="text/template" id="dataIsEntryFee">
+    <?php echo $is_entry_fee;?>
 </script>
 <script type="text/javascript">
-    jQuery.playerdraft.mixSetData();
+    jQuery.playerdraft.golfSkinSetData();
 </script>

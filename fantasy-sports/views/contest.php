@@ -3,6 +3,7 @@
         <input type="hidden" id="scoringCats" value='<?php echo   json_encode($scoringCats);?>' />
         <input type="hidden" id="multiEntry" value='<?php echo $league['multi_entry'];?>' />
         <input type="hidden" id="leagueOptionType" value='<?php echo $league['option_type'];?>' />
+        <input type="hidden" id="gameType" value='<?php echo $league['gameType'];?>' />
         <div class="f-column-12 f-clearfix">
             <div id="f-scoring-table-name">
                 <h1>
@@ -76,6 +77,15 @@
                 </ul>
             </section>
         </div>
+            <?php if($league['gameType'] == 'GOLFSKIN'): ?>
+            <div class="f-column-12" style="text-align: right;">
+                <select onchange="jQuery.playerdraft.loadUserResultByRound();" class="form-control" name="list_round" id="list_round" style="display: inline-block; width: 40%;margin-bottom: 5px;">
+                    <?php foreach($aRounds as $round): ?>
+                    <option value="<?php echo $round['id']; ?>"><?php echo $round['name']; ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php endif; ?>
         <?php endif;?>
         <div class="f-column-12 f-small-screen-pane" id="f-live-scoring-leaderboard">
             <div>
@@ -87,7 +97,7 @@
                             <?php if($league['multi_entry'] == 1):?>
                             <th style="width:50px;"><?php echo __('Entry', FV_DOMAIN)?></th>
                             <?php endif;?>
-                            <th class="f-text-align-right" style="width:54px;"><?php echo __('Score', FV_DOMAIN)?></th>
+                            <th class="f-text-align-right" style="width:54px;"><?php echo $league['gameType']=='GOLFSKIN'?__('Skin', FV_DOMAIN):__('Score', FV_DOMAIN)?></th>
                             <?php if(get_option('fanvictor_no_cash') == 0):?>
                             <th class="f-text-align-right" style="width:106px;"><?php echo __('Prizes', FV_DOMAIN)?></th>
                             <?php endif;?>
@@ -111,7 +121,7 @@
             </div>
         </div>
 		<div class="clear"></div>
-        <?php if($scoringCats != null):?> 
+        <?php if($scoringCats != null && $league['gameType'] != 'GOLFSKIN'):?> 
             <div>
                 <h3 style="margin-bottom: 0"><?php echo __('Scoring Categories', FV_DOMAIN);?></h3>
                 <?php foreach($scoringCats as $item):?> 
@@ -119,7 +129,7 @@
                 <?php endforeach;?>
             </div>
         <?php endif;?> 
-        <?php if($bonus != null):?>
+        <?php if($bonus != null && $league['gameType'] != 'GOLFSKIN'):?>
         <div id="bonusPoints">
             <h3 style="margin-bottom: 0"><?php echo __('Bonus', FV_DOMAIN);?></h3>
             <?php echo $bonus;?>

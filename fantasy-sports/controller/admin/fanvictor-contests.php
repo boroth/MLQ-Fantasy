@@ -94,7 +94,7 @@ class Fanvictor_Contests
                 
                 if($users != null)
                 {
-                    if($league['gameType'] == 'PLAYERDRAFT' && $league['is_team'] == 1)
+                    if(($league['gameType'] == 'PLAYERDRAFT' || $league['gameType'] == 'BEST5'))
                     {
                         fputcsv($file, array('Num', 'User', 'Entry Number', 'ID', 'Team Name', 'Pick Name'));
                     }
@@ -123,7 +123,7 @@ class Fanvictor_Contests
                                             $login_name = $user['user_login'];
                                             $entry_number = $entry['entry_number'];
                                         }
-                                        if($league['gameType'] == 'PLAYERDRAFT' && $league['is_team'] == 1)
+                                        if(($league['gameType'] == 'PLAYERDRAFT' || $league['gameType'] == 'BEST5'))
                                         {
                                             fputcsv($file, array($num, $login_name, $entry_number, $pick['id'], $pick['team_name'], $pick['name']));
                                         }
@@ -186,7 +186,8 @@ class Fanvictor_Contests
         
         $aLeagueSizes = get_option('fanvictor_league_size');
         $aEntryFees = get_option('fanvictor_entry_fee');
-        
+        $is_allow_tie = $aDatas['league']['allow_tie'];
+        $game_type = $aDatas['league']['gameType'];
         //mixing sport
         $allow_mixing_sport = $aDatas['allow_mixing_sport'];
         $aDates = $aDatas['mixing_pools'];
@@ -206,7 +207,9 @@ class Fanvictor_Contests
             isset($_POST['percentage']) ? $_POST['percentage'] : null,
             isset($_POST['mixingPools']) ? $_POST['mixingPools'] : null,
             isset($_POST['sport_type']) ? $_POST['sport_type'] : null,
-            $_POST['mixing_game_type']
+            $_POST['mixing_game_type'],
+            isset($_POST['payouts_name']) ? $_POST['payouts_name'] : null,
+            isset($_POST['payouts_price']) ? $_POST['payouts_price'] : null   
         );
         
         switch($valid)

@@ -127,7 +127,8 @@ class ScoringCategory extends Model
         $data = array('org_id' => $aVals['org_id'],
                       'name' => $aVals['name'],
                       'points' => $aVals['points'],
-                      'scoring_type' => $aVals['scoring_type']);
+                      'scoring_type' => $aVals['scoring_type'],
+                      'alias'=>$aVals['alias']);
         if($isUpdate)
         {
             $data['id'] = $aVals['id'];

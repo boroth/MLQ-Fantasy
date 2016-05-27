@@ -70,7 +70,7 @@ jQuery.ranking = {
             var htmlPlayers = 
                 '<table class="table table-bordered table-responsive table-condensed">\n\
                     <tr>\n\
-                        <th class="sort ' + user_sort_class + '" onclick="jQuery.ranking.doSort(' + entry_number + ', ' + page + ', \'user\')">' + wpfs['h_User'] + '</th>\n\
+                        <th class="sort '+ user_sort_class + '" onclick="jQuery.ranking.doSort(' + entry_number + ', ' + page + ', \'user\')">' + wpfs['h_User'] + '</th>\n\
                         ' + htmlMultiEntry + '\n\
                         <th style="width:10%;" class="sort ' + rank_sort_class + '" onclick="jQuery.ranking.doSort(' + entry_number + ', ' + page + ', \'rank\')">' + wpfs['h_Rank'] + '</th>\n\
                         <th style="width:10%">' + wpfs['h_Points'] + '</th>\n\
@@ -94,7 +94,13 @@ jQuery.ranking = {
                     }
                     if(!user.current)
                     {
-                        htmlSelect = '<input type="radio" id="userinfo' + user.userID + user.entry_number +'" name="user" onclick="jQuery.ranking.selectUser(' + user.userID + ', ' + user.entry_number + ');">';
+                        if(league.gameType == 'PICKSQUARES'){
+                            htmlSelect = '<input type="radio" id="userinfo' + user.userID + user.entry_number +'" name="user" onclick="jQuery.ranking.selectPickSquaresUser(' + user.userID + ', ' + user.entry_number + ');">';
+
+                        }else{
+                            htmlSelect = '<input type="radio" id="userinfo' + user.userID + user.entry_number +'" name="user" onclick="jQuery.ranking.selectUser(' + user.userID + ', ' + user.entry_number + ');">';
+
+                        }
                     }
                     if(pool.allow_method == 1)
                     {
@@ -157,7 +163,7 @@ jQuery.ranking = {
                             <th style="width:25%" id="yourResultHeader">Competitor Pick</th>\n\
                             <th style="width:25%">Actual Result</th>\n\
                         </tr>';
-                if(fights != null)
+                if(fights != null && league.gameType != 'PICKSQUARES')
                 {
                     for(var i=0; i<fights.length; i++)
                     {
@@ -172,11 +178,19 @@ jQuery.ranking = {
                         {
                             styleTeam2Win = 'style="color:green"';
                         }
+                        if(fight.winnerID == 0){
+                            styleTeamTie = 'style="color:green"';
+                        }
                         if(league.is_complete)
                         {
                             htmlComplete = 
                                 '<div ' + styleTeam1Win + '>' + fight.name1 + ' ' + fight.team1score + '</div>\n\
                                 <div ' + styleTeam2Win + '>' + fight.name2 + ' ' + fight.team2score + '&nbsp;</div>';
+                                if(fight.winnerID == 0){
+                                    htmlComplete = 
+                                '<div ' + styleTeamTie + '>' + fight.name1 + ' ' + fight.team1score + '</div>\n\
+                                <div ' + styleTeamTie + '>' + fight.name2 + ' ' + fight.team2score + '&nbsp;</div>';
+                                }
                             if(fight.method != '')
                             {
                                 htmlComplete += '<div>Method: ' + fight.method + '</div>';
@@ -226,8 +240,36 @@ jQuery.ranking = {
                             </td>\n\
                             <td>&nbsp;</td>\n\
                         </tr>';
+                }else if(fights != null && league.gameType == 'PICKSQUARES'){
+                    /* for type picksquares*/
+                     fight = fights[0];
+                     var picksquare = [];
+                     if(users != null){
+                         user = users[0];
+                         picksquare = jQuery.parseJSON(user.picks);
+                     }
+                     
+                    htmlComplete = 
+                                '<div>'  +(Math.abs(fight.team1score) % 10)+'_'+(Math.abs(fight.team2score) % 10) +'</div>\n\
+                                ';
+                        htmlFixtures += 
+                            '<tr>\n\
+                                <td>' + fight.name1 + '<br/>\n\
+                                    <div>VS</div>' + fight.name2 + '<br/></td>\n\
+                                <td id="myresult_' + fight.fightID + '">'+picksquare.join()+'\n\
+                                </td>\n\
+                                <td id="yourresult_' + fight.fightID + '"></td>\n\
+                                <td>\n\
+                                    <div class="h_column actual_result">\n\
+                                        ' + htmlComplete + '\n\
+                                    </div>\n\
+                                </td>\n\
+                            </tr>';
                 }
+                
+                
                 htmlFixtures += '</table>';
+                
                 jQuery("#listFixtures").empty().append(htmlFixtures);
             //}
             
@@ -247,7 +289,7 @@ jQuery.ranking = {
             }
             jQuery('#paging_ranking').empty().append(htmlPaging);
             jQuery.ranking.showUserResult(current_user, 1);
-        })
+        });
         jQuery.ajaxSetup({async:true});
     },
     
@@ -291,7 +333,32 @@ jQuery.ranking = {
             }
         }
     },
-    
+    selectPickSquaresUser: function(selID, entry_number){
+        var result = jQuery("#dataResult").val();
+        result = jQuery.parseJSON(result);
+        var league = result.league;
+        var users = result.users;
+        if(!league.can_view_user)
+        {
+            alert("You can see another users' picks after league start only.");
+        }
+        else 
+        {
+            if(users != null)
+            {
+                for(var i in users)
+                {
+                    if(users[i].userID == selID && users[i].entry_number == entry_number)
+                    {
+                        picksquare = jQuery.parseJSON(user.picks);
+                        jQuery("#yourresult_"+users[i].fightID).empty().append( picksquare.join());
+                        
+                    }
+                }
+            }
+        }
+    }
+    ,
     showUserResult: function(user, mypick)
     {
         var result = jQuery("#dataResult").val();
@@ -438,6 +505,6 @@ jQuery.ranking = {
         };
         jQuery.post(ajaxurl, data, function(result) {
             jQuery.ranking.enterLeagueHistory(entry_number);
-        })
+        });
     }
 }

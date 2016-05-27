@@ -17,11 +17,11 @@
     </li>
     <?php if(get_option('fanvictor_no_cash') == 0):?>
     <li class="f-contest-entry-fee-container">
-    <?php echo __('Entry fee:', FV_DOMAIN);?>:
+    <?php echo __('Entry fee', FV_DOMAIN);?>:
         <span class="f-entryFee-value amount">$<?php echo $league['entry_fee'];?></span>
     </li>
     <li class="f-contest-prize-container  f-gameEntry-inner-entryFeeSelected">
-    <?php echo __('Prizes:', FV_DOMAIN);?>:
+    <?php echo __('Prizes', FV_DOMAIN);?>:
         <span class="f-content-prize-amount">
             <a class="f-lightboxPrizeList_show" href="#"  onclick="return jQuery.playerdraft.ruleScoring('<?php echo $league['gameType'];?>', <?php echo $league['leagueID'];?>, '<?php echo htmlentities($league['name']);?>', '<?php echo $league['entry_fee'];?>', '<?php echo $aPool['salary_remaining'];?>', 3)">
                 $<?php echo $league['prizes'];?>
@@ -36,7 +36,7 @@
     </li>
 </ul>
 <div class="clear"></div>
-<?php if($otherLeagues != null):?>
+<?php if($otherLeagues != null && get_option( 'fanvictor_show_import_pick' ) == 1):?>
     <p style="margin: 20px 0 10px;"><?php echo __('Below is a list of games you have already entered for this event. Simply click on \'Import Picks\' to import your picks from that game.', FV_DOMAIN)?></p>
     <table width="100%" cellspacing="0" cellpadding="0" border="0" class="table table-striped table-bordered">
         <thead>
@@ -139,24 +139,24 @@
 						<tr>
                             <th colspan="2" class="f-player-name table-sorting">
 								<?php echo __('Name', FV_DOMAIN);?>
-								<i class="f-icon f-sorted-asc">▴</i>
-								<i class="f-icon f-sorted-desc">▾</i>
+								<i class="f-icon f-sorted-asc">?</i>
+								<i class="f-icon f-sorted-desc">?</i>
 							</th>
                             <?php if(!$aPool['only_playerdraft']):?>
 							<th class="f-player-played table-sorting">
-								<i class="f-icon f-sorted-asc">▴</i>
-								<i class="f-icon f-sorted-desc">▾</i>
+								<i class="f-icon f-sorted-asc">?</i>
+								<i class="f-icon f-sorted-desc">?</i>
 								<?php echo __('Team', FV_DOMAIN);?>
 							</th>
 							<th class="f-player-fixture table-sorting">
 								<?php echo __('Game', FV_DOMAIN);?>
-								<i class="f-icon f-sorted-asc">▴</i>
-								<i class="f-icon f-sorted-desc">▾</i>
+								<i class="f-icon f-sorted-asc">?</i>
+								<i class="f-icon f-sorted-desc">?</i>
 							</th>
                             <?php endif;?>
 							<th class="f-player-salary table-sorting">
-								<i class="f-icon f-sorted-asc">▴</i>
-								<i class="f-icon f-sorted-desc">▾</i>
+								<i class="f-icon f-sorted-asc">?</i>
+								<i class="f-icon f-sorted-desc">?</i>
 								<?php echo __('Salary', FV_DOMAIN);?>
 							</th>
 							<th class="f-player-add"></th>
@@ -326,12 +326,27 @@
     </section>
 </div>
 <?php require_once(FANVICTOR__PLUGIN_DIR_VIEW.'dlg_info.php');?>
+<script type="text/template" id="dataPlayers">
+    <?php echo json_encode($aPlayers);?>
+</script>
+<script type="text/template" id="dataSalaryRemaining">
+    <?php echo $aPool['salary_remaining'];?>
+</script>
+<script type="text/template" id="dataPlayerIdPicks">
+    <?php echo json_encode($playerIdPicks);?>
+</script>
+<script type="text/template" id="dataLeague">
+    <?php echo json_encode($league);?>
+</script>
+<script type="text/template" id="dataFights">
+    <?php echo json_encode($aFights);?>
+</script>
+<script type="text/template" id="dataPool">
+    <?php echo json_encode($aPool);?>
+</script>
+<script type="text/template" id="dataIndicators">
+    <?php echo json_encode($aIndicators);?>
+</script>
 <script type="text/javascript">
-    jQuery.playerdraft.setData('<?php echo json_encode($aPlayers);?>', 
-                               '<?php echo $aPool['salary_remaining'];?>', 
-                               '<?php echo json_encode($playerIdPicks);?>', 
-                               '<?php echo json_encode($league);?>', 
-                               '<?php echo json_encode($aFights);?>',
-                               '<?php echo json_encode($aPool);?>',
-                               '<?php echo json_encode($aIndicators);?>');
+    jQuery.playerdraft.setData();
 </script>

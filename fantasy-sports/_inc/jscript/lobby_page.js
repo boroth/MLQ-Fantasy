@@ -102,9 +102,16 @@ jQuery.lobby =
                                             {
                                                 enterLable = wpfs['edit'];
                                             }
+                                            var urlEnter = jQuery('#submitUrl').val(); 
+                                            if(aLeague.gameType == 'PICKSQUARES'){
+                                                urlEnter = jQuery('#submitPickSquaresUrl').val();
+                                            }
+                                            if(aLeague.gameType == 'GOLFSKIN'){
+                                                urlEnter = jQuery('#submitGolfSkinsUrl').val();
+                                            }
                                             btn_enter = 
                                                 '<div>\n\
-                                                    <a href="' + jQuery('#submitUrl').val() + aLeague.leagueID + '" class="f-button f-primary f-tiny">' + enterLable + '</a>\n\
+                                                    <a href="' + urlEnter + aLeague.leagueID + '" class="f-button f-primary f-tiny">' + enterLable + '</a>\n\
                                                 </div>';
                                         }
                                         else 
@@ -151,6 +158,11 @@ jQuery.lobby =
                                                     </div>\n\
                                                 </div>';
                                         }
+                                        var gametype = aLeague.gameType;
+                                        if(aLeague.gameType == 'GOLFSKIN')
+                                        {
+                                            gametype = 'skin';
+                                        }
                                         html +=   
                                             '<div class="f-lobbyitem">\n\
                                                 <div class="f-title" style="width: ' + titlewidth + '"><span class="ftMobileTitle">CONTEST</span>\n\
@@ -162,7 +174,7 @@ jQuery.lobby =
                                                     ' + htmlMultiEntry + '\n\
 													' + htmlMultiPayout + '\n\
                                                 </div>\n\
-                                                <div class="f-gametype" style="width: 12%"><span class="ftMobileTitle">TYPE</span>' + aLeague.gameType + '</div>\n\
+                                                <div class="f-gametype" style="width: 12%"><span class="ftMobileTitle">TYPE</span>' + gametype + '</div>\n\
                                                 <div class="f-entries" style="width: 12%"><span class="ftMobileTitle">ENTRIES</span>\n\
                                                     <a href="#" onclick="return jQuery.playerdraft.ruleScoring(\'' + aLeague.gameType + '\', ' + aLeague.leagueID + ', \'' + quoteEncoding(aLeague.name) + '\', \'' + aLeague.entry_fee + '\', \'' + aLeague.salary_remaining + '\', 2)">' + aLeague.entries + '</a>\n\
                                                                                                         /' + aLeague.size + '\n\

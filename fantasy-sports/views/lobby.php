@@ -1,5 +1,8 @@
 <div class="f-lobby" data-filter="true">
     <input type="hidden" id="submitUrl" value="<?php echo FANVICTOR_URL_SUBMIT_PICKS;?>" />
+    <input type="hidden" id="submitPickSquaresUrl" value="<?php echo FANVICTOR_URL_PICK_SQUARES;?>" />
+    <input type="hidden" id="submitGolfSkinsUrl" value="<?php echo FANVICTOR_URL_GAME;?>" />
+    
     <div class="f-title">
         <div>
             <?php if(get_option('fanvictor_create_contest')):?>
@@ -161,7 +164,22 @@
                         <div class="lobbyHeader">
                             <div>
                                 <div class="f-title" style="width: <?php echo get_option('fanvictor_no_cash') == 0 ? '34%' : '50%';?>">
-                                    <?php echo __('Contest', FV_DOMAIN);?>
+                                    
+                                    <div class="legend">
+                                        <div style="float:left;width:30%; "><span><?php echo __('Contest', FV_DOMAIN);?></span></div>
+                                        <div class="legend_item">
+                                            <div class="multi-entry-icon">M</div>
+                                            <p><?php echo __('Multi entry', FV_DOMAIN);?></p>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <div class="legend_item">
+                                            <div class="multi-entry-icon">P</div>
+                                            <p><?php echo __('Multi payout', FV_DOMAIN);?> </p>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                            
                                 </div>
                                 <div class="f-gametype" style="width: 12%">
                                     <?php echo __('Type', FV_DOMAIN);?>

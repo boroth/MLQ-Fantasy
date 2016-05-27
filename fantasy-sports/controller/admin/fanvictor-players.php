@@ -87,7 +87,6 @@ class Fanvictor_Players
             switch ($valid)
             {
                 case 'v1':
-                    var_dump($valid);exit;
                     redirect(self::$urladd, __('Please select an organization ', FV_DOMAIN));
                     break;
                 case 'v2':

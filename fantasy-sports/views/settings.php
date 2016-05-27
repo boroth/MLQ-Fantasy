@@ -164,6 +164,17 @@
             </td>
         </tr>
         <tr valign="top">
+            <th scope="row"><?php echo __('Paypal Type', FV_DOMAIN);?></th>
+            <td>
+                <?php $paypal_type = get_option('fanvictor_paypal_type') != null ? get_option('fanvictor_paypal_type') : array();?>
+                <select class="postform" name="fanvictor_paypal_type[]" multiple="">
+                    <option <?php echo in_array(FANVICTOR_PAYPAL_TYPE_NORMAL, $paypal_type) ? 'selected="true"' : '';?> value="<?php echo FANVICTOR_PAYPAL_TYPE_NORMAL;?>"><?php echo __('Normal', FV_DOMAIN);?></option>
+                    <option <?php echo in_array(FANVICTOR_PAYPAL_TYPE_PRO, $paypal_type) ? 'selected="true"' : '';?> value="<?php echo FANVICTOR_PAYPAL_TYPE_PRO;?>"><?php echo __('Pro', FV_DOMAIN);?></option>
+                </select>
+                <p class="description"><?php echo __('If value is True, Paypal will change to testing mode.', FV_DOMAIN);?></p>
+            </td>
+        </tr>
+        <tr valign="top">
             <th scope="row"><?php echo __('Paypal Sandbox', FV_DOMAIN);?></th>
             <td>
                 <select class="postform" name="paypal_test">
@@ -181,6 +192,27 @@
             </td>
         </tr>
         <tr valign="top">
+            <th scope="row"><?php echo __('Paypal Pro Username', FV_DOMAIN);?></th>
+            <td>
+                <input type="text" name="fanvictor_paypal_pro_username" class="regular-text ltr" value="<?php echo esc_attr(get_option('fanvictor_paypal_pro_username'));?>" />
+                <p class="description"><?php echo __('The Username used for PayPal Pro account.', FV_DOMAIN);?></p>
+            </td>
+        </tr>
+        <tr valign="top">
+            <th scope="row"><?php echo __('Paypal Pro Passowrd', FV_DOMAIN);?></th>
+            <td>
+                <input type="text" name="fanvictor_paypal_pro_password" class="regular-text ltr" value="<?php echo esc_attr(get_option('fanvictor_paypal_pro_password'));?>" />
+                <p class="description"><?php echo __('The Password used for PayPal Pro account.', FV_DOMAIN);?></p>
+            </td>
+        </tr>
+        <tr valign="top">
+            <th scope="row"><?php echo __('Paypal Pro Signature', FV_DOMAIN);?></th>
+            <td>
+                <input type="text" name="fanvictor_paypal_pro_signature" class="regular-text ltr" value="<?php echo esc_attr(get_option('fanvictor_paypal_pro_signature'));?>" />
+                <p class="description"><?php echo __('The Signature used for PayPal Pro account.', FV_DOMAIN);?></p>
+            </td>
+        </tr>
+        <tr valign="top">
             <th scope="row"><?php echo __('Minimum Deposit', FV_DOMAIN);?></th>
             <td>
                 <input type="text" name="fanvictor_minimum_deposit" class="regular-text ltr" value="<?php echo esc_attr(get_option('fanvictor_minimum_deposit'));?>" />
@@ -193,6 +225,18 @@
                 <input type="text" name="fanvictor_choice_account" class="regular-text ltr" placeholder="username/password" value="<?php echo esc_attr(get_option('fanvictor_choice_account'));?>"/>
                 <p class="description"><?php echo __('Input as the following format: username/password', FV_DOMAIN);?></p>
                 <p class="description"><?php echo  sprintf(__('Choice Merchant Solutions offers the widest selection of credit card processing solutions and products. Click %s to register', FV_DOMAIN), "<a href='http://fantasysportspayments.com/' target='_blank'>".__('here')."</a>");?></p>
+            </td>
+        </tr>
+        <tr valign="top">
+            <th scope="row"><?php echo __('Show import picks', FV_DOMAIN);?></th>
+            <td>
+                <input type="checkbox"  name="fanvictor_show_import_pick" <?php checked( 1, get_option( 'fanvictor_show_import_pick' ) ); ?>  value="1"/>
+            </td>
+        </tr>
+        <tr valign="top">
+            <th scope="row"><?php echo __('Get email from bettor when join a contest', FV_DOMAIN);?></th>
+            <td>
+                <input type="checkbox"  name="fanvictor_get_email_from_better_join_contest" <?php checked( 1, get_option( 'fanvictor_get_email_from_better_join_contest' ) ); ?>  value="1"/>
             </td>
         </tr>
     </table>

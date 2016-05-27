@@ -27,7 +27,7 @@ class Statistics
 		
 		list($aSports, $aPools, $aTeams, $aPos , $aRounds, $allow_statistic)=self::$fanvictor->getStatData();
 
-        $is_loggedin = (get_current_user_id() > 0) ? 1 : 0;
+        $is_loggedin = ($_COOKIE['fanvictor_user_id'] > 0) ? 1 : 0;
 		include FANVICTOR__PLUGIN_DIR_VIEW.'statistics.php';
 	}
 }

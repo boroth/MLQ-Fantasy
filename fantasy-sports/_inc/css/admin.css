@@ -70,3 +70,6 @@
 .ui-dialog table tr:hover{
     background-color: transparent;
 }
+.tbl_show_stats tr td{
+    text-align: center;
+}

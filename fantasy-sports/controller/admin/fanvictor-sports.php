@@ -18,6 +18,8 @@ class Fanvictor_Sports
     {
         //load css js
         wp_enqueue_script('admin.js', FANVICTOR__PLUGIN_URL_JS.'admin/admin.js');
+        wp_enqueue_style('ui.css', FANVICTOR__PLUGIN_URL_CSS.'ui/ui.css');
+        wp_enqueue_script('ui.js', FANVICTOR__PLUGIN_URL_JS.'ui.js');
         
         //task action delete
         if(isset($_POST["task"]) && $task = $_POST["task"])

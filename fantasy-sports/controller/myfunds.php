@@ -39,9 +39,9 @@ class MyFunds
         unset($_SESSION['totalMoney']);
         
         $aGateways = self::$payment->viewGateway();
-        $aUserPayment = self::$payment->getUserPaymentInfo(PAYPAL, get_current_user_id());
+        $aUserPayment = self::$payment->getUserPaymentInfo(PAYPAL, $_COOKIE['fanvictor_user_id']);
         $aUser = self::$payment->getUserData();
-        $withdrawPending = self::$user->getWithdrawlsTotal(get_current_user_id());
+        $withdrawPending = self::$user->getWithdrawlsTotal($_COOKIE['fanvictor_user_id']);
         $isHasCoupon = self::$coupon->isHasCoupon(CP_ACTION_ADD_MONEY);
         include FANVICTOR__PLUGIN_DIR_VIEW.'myfunds.php';
     }

@@ -7,7 +7,8 @@ jQuery.payment =
     sendCredits: function()
     {
         var dataString = jQuery('#formAddCredits').serialize();
-        jQuery('#btnAddCredits').attr('disabled', 'true');
+        jQuery('.public_message').hide();
+        jQuery('#btnAddCredits').attr('disabled', 'disabled');
         jQuery('#formAddCredits').find('.waiting').show();
         jQuery.post(ajaxurl, 'action=addCredits&' + dataString, function(result) {
             var data = JSON.parse(result);

@@ -2,6 +2,7 @@
 include_once("paypal.php");
 define('PAYPAL', 'PAYPAL');
 define('CHOICE', 'CHOICE');
+define('PAYPAL_PRO', 'PAYPAL_PRO');
 class Payment
 {
     function validEmail($email)
@@ -17,6 +18,7 @@ class Payment
     function isGatewayExist($data)
     {
         $gateway = $this->viewGateway();
+        $gateway[] = PAYPAL_PRO;
         if(in_array($data, $gateway))
         {
             return true;
@@ -63,7 +65,7 @@ class Payment
         return $iCredit * $credit;
     }
     
-    function onlineTransaction($gateway = PAYPAL, $aSettings)
+    function onlineTransaction($gateway = PAYPAL, $aSettings, $fundshistoryID = null)
     {
         global $wpdb;
         switch($gateway)
@@ -114,9 +116,26 @@ class Payment
                     return __("Something went wrong. Please try again", FV_DOMAIN);
                 }
                 break;
+            case PAYPAL_PRO:
+                $paypal = new PaypalPro();
+                $result = $paypal->checkout($aSettings);
+                if($result['success'] == 1)
+                {
+                    $this->updateUserBalance($aSettings['AMT'], false, 0, $_COOKIE['fanvictor_user_id']);
+                    $this->updateFundhistory($fundshistoryID, array(
+                        'transactionID' => $result['transactionID'], 
+                        'is_checkout' => 0), $_COOKIE['fanvictor_user_id'], "completed");
+                    return true;
+                }
+                else if($result['success'] == 0 && !empty($result['message']))
+                {
+                    return $result['message'];
+                }
+                break;
             default :
                 return false;
         }
+        return false;
     }
     
     function confirmPaypal()
@@ -168,7 +187,7 @@ class Payment
 	###########################
     function getUserData($userID = null)
     {
-        $user_id = (int)get_current_user_id();
+        $user_id = (int)$_COOKIE['fanvictor_user_id'];
         if((int)$userID > 0)
         {
             $user_id = $userID;
@@ -202,9 +221,10 @@ class Payment
         return false;
     }
     
-    public function isUserEnoughMoneyToJoin($prize = 0, $leagueID = null)
+    public function isUserEnoughMoneyToJoin($prize = 0, $leagueID = null, $entry_number = 1)
     {
-        if($this->isMakeBetForLeague($leagueID))
+        
+        if($this->isMakeBetForLeague($leagueID, $entry_number))
         {
             return true;
         }
@@ -247,7 +267,7 @@ class Payment
     public function isUserPaymentInfoExist($aVals)
     {
         global $wpdb;
-        $sCond = "WHERE user_id = ".get_current_user_id();
+        $sCond = "WHERE user_id = ".$_COOKIE['fanvictor_user_id'];
         $table_name = $wpdb->prefix."user_payment";
         $sql = "SELECT user_id "
              . "FROM $table_name "
@@ -263,7 +283,7 @@ class Payment
     function getUserPaymentInfo($gateway = PAYPAL, $user_id = null)
     {
         global $wpdb;
-        $sCond = "WHERE up.user_id = ".(int)get_current_user_id()." AND up.gateway = '$gateway'";
+        $sCond = "WHERE up.user_id = ".(int)$_COOKIE['fanvictor_user_id']." AND up.gateway = '$gateway'";
         if((int)$user_id > 0)
         {
             $sCond = "WHERE up.user_id = ".(int)$user_id;
@@ -284,7 +304,7 @@ class Payment
     public function addUserPaymentInfo($aVals)
     {
         global $wpdb;
-        $aVals['user_id'] = get_current_user_id();
+        $aVals['user_id'] = $_COOKIE['fanvictor_user_id'];
         $aVals['time_stamp'] = current_time('timestamp');
         $aVals['time_update'] = current_time('timestamp');
         return $wpdb->insert($wpdb->prefix."user_payment", $aVals);
@@ -294,7 +314,7 @@ class Payment
     {
         global $wpdb;
         $aVals['time_update'] = current_time('timestamp');
-        return $wpdb->update($wpdb->prefix."user_payment", $aVals, array('user_id' => get_current_user_id()));
+        return $wpdb->update($wpdb->prefix."user_payment", $aVals, array('user_id' => $_COOKIE['fanvictor_user_id']));
     }
     
     ###########################
@@ -305,7 +325,7 @@ class Payment
     public function isMakeBetForLeague($leagueID, $entry_number = 1)
     {
         global $wpdb;
-        $sCons = "WHERE userID = ".get_current_user_id()." AND leagueID = ".(int)$leagueID." AND entry_number = ".$entry_number;
+        $sCons = "WHERE userID = ".$_COOKIE['fanvictor_user_id']." AND leagueID = ".(int)$leagueID." AND entry_number = ".$entry_number;
         $table_name = $wpdb->prefix.'fundhistory';
         $sql = "SELECT count(*) "
              . "FROM $table_name "
@@ -321,7 +341,7 @@ class Payment
     public function isPaypalCompleted($fundshistoryID)
     {
         global $wpdb;
-        $sCons = "WHERE userID = ".get_current_user_id()." AND transactionID != '' AND fundshistoryID = ".(int)$fundshistoryID;
+        $sCons = "WHERE userID = ".$_COOKIE['fanvictor_user_id']." AND transactionID != '' AND fundshistoryID = ".(int)$fundshistoryID;
         $table_name = $wpdb->prefix.'fundhistory';
         $sql = "SELECT count(*) "
              . "FROM $table_name "
@@ -354,7 +374,7 @@ class Payment
 	{	
         global $wpdb;
         $table_fundhistory = $wpdb->prefix."fundhistory";
-        $aConds .= 'userID = '.(int)get_current_user_id();
+        $aConds .= 'userID = '.(int)$_COOKIE['fanvictor_user_id'];
         $sCond = $aConds != null ? "WHERE ".$aConds : '';
         $sql = "SELECT COUNT(*) "
              . "FROM $table_fundhistory "
@@ -421,7 +441,7 @@ class Payment
         global $wpdb;
         if($prize > 0)
         {
-            $userID = (int)get_current_user_id();
+            $userID = (int)$_COOKIE['fanvictor_user_id'];
             if((int)$user_id > 0)
             {
                 $userID = $user_id;
@@ -457,7 +477,7 @@ class Payment
     public function updateFundhistory($iId, $aValues, $user_id = null, $status = '')
     {
         global $wpdb;
-        $iUserId = get_current_user_id();
+        $iUserId = $_COOKIE['fanvictor_user_id'];
         if((int)$user_id > 0)
         {
             $iUserId = $user_id;
@@ -492,7 +512,7 @@ class Payment
     {
         global $wpdb;
         $table_name = $wpdb->prefix.'withdrawls';
-        $sCond = "WHERE userID = ".get_current_user_id();
+        $sCond = "WHERE userID = ".$_COOKIE['fanvictor_user_id'];
         if((int)$iId > 0)
         {
             $sCond = "WHERE withdrawlID = ".$iId;
@@ -517,7 +537,7 @@ class Payment
 	{	
         global $wpdb;
         $table_name = $wpdb->prefix."withdrawls";
-        $aConds .= 'userID = '.(int)get_current_user_id();
+        $aConds .= 'userID = '.(int)$_COOKIE['fanvictor_user_id'];
         $sCond = $aConds != null ? "WHERE ".$aConds : '';
         $sql = "SELECT COUNT(*) "
              . "FROM $table_name "
@@ -539,7 +559,7 @@ class Payment
     public function addWithdraw($amount = 0, $reson = null, $user_id = null, $new_balance = 0)
     {
         global $wpdb;
-        $userID = get_current_user_id();
+        $userID = $_COOKIE['fanvictor_user_id'];
         if((int)$user_id > 0)
         {
             $userID = $user_id;

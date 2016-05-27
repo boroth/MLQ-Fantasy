@@ -112,9 +112,9 @@
     var showInviteFriends = '<?php echo $showInviteFriends;?>';
     if (isLive == 1 && status == 'NEW')
     {
-        jQuery.ranking.liveEntriesResult('<?php echo $aLeague['poolID'];?>', '<?php echo $aLeague['leagueID'];?>', '<?php echo $entry_number;?>')
+        jQuery.ranking.liveEntriesResult('<?php echo $aLeague['poolID'];?>', '<?php echo $aLeague['leagueID'];?>', '<?php echo $entry_number;?>');
         setInterval(function(){ 
-            jQuery.ranking.liveEntriesResult('<?php echo $aLeague['poolID'];?>', '<?php echo $aLeague['leagueID'];?>', '<?php echo $entry_number;?>')
+            jQuery.ranking.liveEntriesResult('<?php echo $aLeague['poolID'];?>', '<?php echo $aLeague['leagueID'];?>', '<?php echo $entry_number;?>');
         },60000);
     }
     else 
@@ -125,11 +125,14 @@
     {
         //jQuery.ranking.inviteFriends();
         jQuery.playerdraft.showDialog('#dlgFriends');
+        <?php if(get_option('fanvictor_get_email_from_better_join_contest')): ?>
+            jQuery.playerdraft.sendUserJoincontestEmail('<?php echo $aLeague['leagueID']; ?>','<?php echo $entry_number; ?>');
+        <?php endif; ?>
     }
-    
+
     <?php if($allow_pick_email):?>
     jQuery(window).load(function(){
         jQuery.playerdraft.sendUserPickEmail('<?php echo $aLeague['leagueID'];?>');
-    })
+    });
     <?php endif;?>
 </script>

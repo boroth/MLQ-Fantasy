@@ -25,12 +25,22 @@ class TablePools extends WP_List_Table
             case 'playerdraft_result':
                 if($item['playerdraft'] == true)
                 {
+                    $info = '';
+                    if(is_null($item['uploaded_file'])){
+                        $item['uploaded_file'] = '';
+                    }
+                        $arr = array(
+                            'org_id' => $item['organization'],
+                            'uploaded_file'=>$item['uploaded_file']
+                        );
+                        //$info = '<input type="hidden" id="info_upload_'.$item['poolID'].'" value='. json_encode($arr) . '>';
+                        $info = "<input type='hidden' id='info_upload_$item[poolID]' value='".  json_encode($arr)."'>";
                     $hide = 'style="display:none"';
                     if($item['status'] == 'NEW')
                     {
                         $hide = '';
                     }
-                    return '<a onclick="return jQuery.fight.viewPlayerDraftResult('.$item['poolID'].', \'Player Draft Results\');" href="#" '.$hide.'>Result</a>';
+                    return '<a onclick="return jQuery.fight.viewPlayerDraftResult('.$item['poolID'].', \'Player Draft Results\');" href="#" '.$hide.'>Result</a>'.$info;
                 }
                 return '';
             case 'result':
@@ -113,7 +123,7 @@ class TablePools extends WP_List_Table
     
     function prepare_items($keyword = null) 
     {
-        $user_id = get_current_user_id();
+        $user_id = $_COOKIE['fanvictor_user_id'];
         $screen = get_current_screen();
         
         // retrieve the "per_page" option
@@ -136,7 +146,7 @@ class TablePools extends WP_List_Table
         }
         
         // retrieve the value of the option stored for the current user
-        $item_per_page = get_user_meta(get_current_user_id(), $screen_option, true);
+        $item_per_page = get_user_meta($_COOKIE['fanvictor_user_id'], $screen_option, true);
         
         if ( empty ( $item_per_page) || $item_per_page < 1 ) {
             // get the default value if none is set
@@ -154,7 +164,6 @@ class TablePools extends WP_List_Table
         //get data
         list($total_items, $aPools) = self::$pools->getPoolsByFilter($aCond, 'poolID DESC', ($this->get_pagenum() - 1) * $item_per_page, $item_per_page);
         $aResults = self::$pools->parsePoolsData($aPools);
-        
         $columns  = $this->get_columns();
         $hidden   = array();
         

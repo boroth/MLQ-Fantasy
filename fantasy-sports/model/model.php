@@ -30,7 +30,7 @@ class Model
         }
         else 
         {
-            $url = get_option('fanvictor_api_url')."/$task/".$api_token.'/'.get_current_user_id();
+            $url = get_option('fanvictor_api_url')."/$task/".$api_token.'/'.$_COOKIE['fanvictor_user_id'];
         }
         
         if(isset($this->selectField) && $this->selectField != null)
@@ -40,7 +40,6 @@ class Model
         //send request
         $client = $this->getRestClient('POST', $url);
         $data = $client->send($params);
-        
         $this->selectField = null;
         if($json)
         {

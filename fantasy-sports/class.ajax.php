@@ -1,5 +1,6 @@
-<?php
+<?php 
 $ajax = new Ajax();
+
 class Ajax
 {
     private static $fanvictor;
@@ -17,8 +18,8 @@ class Ajax
     
     public function __construct() 
     {
-        
-        add_action('init', array(&$this, 'init'));
+      // add_action('init', array(&$this, 'init'));
+       self::init();
     }
     
     public static function init()
@@ -45,17 +46,22 @@ class Ajax
                        'loadUser', 'loadPoolInfo', 'viewPlayerDraftResult', 'updatePlayerDraftResult',
                        'loadUserResult', 'loadLeagueLobby', 'loadLeagueEntries', 'loadLeaguePrizes', 'sendUserPickEmail',
                        'loadLiveEntries', 'liveEntriesResult', 'loadContestScores', 'loadPlayerPoints', 'loadSummary',
-                       'loadPlayerStatistics', 'activeScoringCategory', 'reverseResult', 'createContest', 'getStat', 'sendPrivateInvitationEmail');
-        foreach($funcs as $func)
-        {
+                       'loadPlayerStatistics', 'activeScoringCategory', 'reverseResult', 'createContest', 'getStat',
+                       'sendPrivateInvitationEmail','getUserbalance','sendUploadedFileStats','loadStatsUploadedFile','sendUserJoincontestEmail');
+     
+        /*foreach ($funcs as $func) {
             add_action("wp_ajax_$func", array('Ajax', $func));
-        }
-		
-		if(get_current_user_id() == 0 && isset($_POST['action']) && in_array($_POST['action'], $funcs))
+        }*/
+        //add_action("wp_ajax_".$_POST['action'], array('Ajax', $_POST['action']));
+        if(!empty($_POST['action']) && in_array($_POST['action'], $funcs))
         {
+            self::$_POST['action']();
+        }
+        /*if ($_COOKIE['fanvictor_user_id'] == 0 && isset($_POST['action']) && in_array($_POST['action'], $funcs)) {
             $func = $_POST['action'];
             self::$func();
-        }
+        }*/
+        
     }
     
     public static function updateNewContests()
@@ -325,7 +331,7 @@ class Ajax
     
     public static function loadUserResult()
     {
-        $aResults = self::$fanvictor->getPlayerPicksResult($_POST['leagueID'], $_POST['userID'], $_POST['entry_number']);
+        $aResults = self::$fanvictor->getPlayerPicksResult($_POST['leagueID'], $_POST['userID'], $_POST['entry_number'],$_POST['roundID']);
         exit(json_encode($aResults));
     }
     
@@ -339,7 +345,7 @@ class Ajax
     
     public static function liveEntriesResult()
     {
-        self::$fanvictor->liveEntriesResult($_POST['poolID'], $_POST['leagueID']);
+       self::$fanvictor->liveEntriesResult($_POST['poolID'], $_POST['leagueID']);
     }
     
     public static function loadContestScores()
@@ -353,7 +359,7 @@ class Ajax
             foreach($aScores as $k => $aScore)
             {
                 $aScore[$k]['current'] = false;
-                if($aScore['userID'] == get_current_user_id() && $aScore['entry_number'] == $_POST['entry_number'])
+                if($aScore['userID'] == $_COOKIE['fanvictor_user_id'] && $aScore['entry_number'] == $_POST['entry_number'])
                 {
                     $aScores[$k]['current'] = true;
                 }
@@ -414,6 +420,50 @@ class Ajax
             {
                 exit(json_encode(array('notice' => __('Please select gateway', FV_DOMAIN))));
             }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['first_name']))
+            {
+                exit(json_encode(array('notice' => __('Please input first name', FV_DOMAIN))));
+            }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['street']))
+            {
+                exit(json_encode(array('notice' => __('Please input address', FV_DOMAIN))));
+            }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['last_name']))
+            {
+                exit(json_encode(array('notice' => __('Please input last name', FV_DOMAIN))));
+            }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['credit_card_number']))
+            {
+                exit(json_encode(array('notice' => __('Please input credit card number', FV_DOMAIN))));
+            }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['city']))
+            {
+                exit(json_encode(array('notice' => __('Please input city', FV_DOMAIN))));
+            }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['credit_card_type']))
+            {
+                exit(json_encode(array('notice' => __('Please select credit card type', FV_DOMAIN))));
+            }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['countrycode']))
+            {
+                exit(json_encode(array('notice' => __('Please select country', FV_DOMAIN))));
+            }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['expire_month']))
+            {
+                exit(json_encode(array('notice' => __('Please input expire month', FV_DOMAIN))));
+            }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['expire_year']))
+            {
+                exit(json_encode(array('notice' => __('Please input expire year', FV_DOMAIN))));
+            }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['cvv']))
+            {
+                exit(json_encode(array('notice' => __('Please input security code', FV_DOMAIN))));
+            }
+            else if($_POST['gateway'] == PAYPAL_PRO && empty($_POST['state']))
+            {
+                exit(json_encode(array('notice' => __('Please input state', FV_DOMAIN))));
+            }
             else
             {
                 $credits = self::$payment->feePercentage($credits);
@@ -426,34 +476,69 @@ class Ajax
                     {
                         $money += self::$coupon->getTotalDiscountValue($coupon->discount_type, $coupon->discount_value, $money);
                         $reason = __("Coupon code: ".$_POST['coupon_code'], FV_DOMAIN);
-                        self::$coupon->addCouponUsed($coupon->id, get_current_user_id());
+                        self::$coupon->addCouponUsed($coupon->id, $_COOKIE['fanvictor_user_id']);
                     }
                 }
                 $iFundHitoryId = self::$payment->addFundhistory($money, 0, 0, 'DEPOSIT', 'ADD', null, $gateway, $reason, (int)get_option('fanvictor_cash_to_credit'));
                 if((int)$iFundHitoryId > 0)
                 {
-                    $aSettings = array('paypal_email' => get_option('paypal_email_account'),
-                                       'business' => get_option('paypal_email_account'),
-                                       'item_name' => "Deposit ".$iFundHitoryId,
-                                       'item_number' => 1,
-                                       'amount' => $credits,
-                                       'notify_url' => FANVICTOR_URL_NOTIFY_ADD_FUNDS,
-                                       'return' => FANVICTOR_URL_SUCCESS_ADD_FUNDS,
-                                       'cancel_return' => FANVICTOR_URL_ADD_FUNDS,
-									   'custom' => get_current_user_id().'|'.$iFundHitoryId.'|'.$money);
-                    $sUrl = self::$payment->onlineTransaction($gateway, $aSettings);
-                    if($sUrl)
+                    if($_POST['gateway'] == PAYPAL_PRO)
                     {
-                    	unset($_SESSION['is_transaction']);
-                    	if(strstr($sUrl, "//"))
-                    		exit(json_encode(array('result' => $sUrl)));
-                    	else
-							exit(json_encode(array('notice' => $sUrl)));
+                        $aSettings = array(
+                            'CREDITCARDTYPE' => $_POST['credit_card_type'],
+                            'ACCT' => $_POST['credit_card_number'],
+                            'EXPDATE' => $_POST['expire_month'].$_POST['expire_year'],
+                            'CVV2' => $_POST['cvv'],
+                            'FIRSTNAME' => $_POST['first_name'],
+                            'LASTNAME' => $_POST['last_name'],
+                            'STREET' => $_POST['street'],
+                            'CITY' => $_POST['city'],
+                            'STATE' => $_POST['state'],
+                            'COUNTRYCODE' => $_POST['countrycode'],
+                            'ZIP' => $_POST['zipcode'],
+                            'AMT' => $credits
+                        );
+                        $result = self::$payment->onlineTransaction($gateway, $aSettings, $iFundHitoryId);
+                        if($result)
+                        {
+                            $_SESSION['msg'] = __('Successfully add fund', FV_DOMAIN);
+                            if(!is_bool($result))
+                            {
+                                exit(json_encode(array('notice' => $result)));
+                            }
+                            exit(json_encode(array('result' => FANVICTOR_URL_ADD_FUNDS)));
+                        }
+                        else
+                        {
+                            exit(json_encode(array('notice' => __('Something went wrong, please try again.', FV_DOMAIN))));
+                        }
                     }
                     else
                     {
-                        self::$payment->deleteFundhistory($iFundHitoryId);
-                        exit(json_encode(array('notice' => __('Something went wrong! Please try again.', FV_DOMAIN))));
+                        $aSettings = array('paypal_email' => get_option('paypal_email_account'),
+                                           'business' => get_option('paypal_email_account'),
+                                           'item_name' => "Deposit ".$iFundHitoryId,
+                                           'item_number' => 1,
+                                           'amount' => $credits,
+                                           'notify_url' => FANVICTOR_URL_NOTIFY_ADD_FUNDS,
+                                           'return' => FANVICTOR_URL_SUCCESS_ADD_FUNDS,
+                                           'cancel_return' => FANVICTOR_URL_ADD_FUNDS,
+                                           'custom' => $_COOKIE['fanvictor_user_id'].'|'.$iFundHitoryId.'|'.$money);
+                    
+                        $sUrl = self::$payment->onlineTransaction($gateway, $aSettings);
+                        if($sUrl)
+                        {
+                            unset($_SESSION['is_transaction']);
+                            if(strstr($sUrl, "//"))
+                                exit(json_encode(array('result' => $sUrl)));
+                            else
+                                exit(json_encode(array('notice' => $sUrl)));
+                        }
+                        else
+                        {
+                            self::$payment->deleteFundhistory($iFundHitoryId);
+                            exit(json_encode(array('notice' => __('Something went wrong! Please try again.', FV_DOMAIN))));
+                        }
                     }
                 }
                 else
@@ -467,7 +552,7 @@ class Ajax
             exit(json_encode(array('notice' => __('You are in transaction session. To start new session please refresh this page', FV_DOMAIN))));
         }
     }
-    
+
     public static function requestPayment()
     {
         $aVals = $_POST['val'];
@@ -822,6 +907,7 @@ class Ajax
                 
                 $aFight['fighterID1'] == $aFight['winnerID'] ? $win1 = 'selected = "true"' : $win1 = null;
                 $aFight['fighterID2'] == $aFight['winnerID'] ? $win2 = 'selected = "true"' : $win2 = null;
+                 ($win1 == null && $win2 == null)? $tie =  'selected = "true"' :$tie = null;
                 $sResult .= '<div class="fight_container">
                                 <div class="title_area">
                                     <div class="fight_number_title">'.$aFight['name'].'</div>
@@ -846,6 +932,7 @@ class Ajax
                                                         <option value="">Please select winner</option>
                                                         <option value="'.$aFight['fighterID1'].'" '.$win1.'>'.$sFighterName1.'</option>
                                                         <option value="'.$aFight['fighterID2'].'" '.$win2.'>'.$sFighterName2.'</option>
+                                                         <option value="0" '.$tie.'>Draw</option>
                                                     </select>
                                                 </div>
                                                 <div class="clear"></div>
@@ -1087,14 +1174,15 @@ class Ajax
         //scoring category
         $item_per_page = 10;
         $aScorings = self::$scoringcategory->getPlayerStatsScoring($poolID, $fightID, $roundID, $playerID, $item_per_page, $page);
+        
         $big = 999999999;
-        $paging = paginate_links( array(
+        /*$paging = paginate_links( array(
             'base' => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
             'format' => '#',
             'current' => max($page, get_query_var('paged') ),
             'total' => ceil($aScorings['total'] / $item_per_page)
-        ));
-        $aScorings['paging'] = $paging;
+        ));*/
+        //$aScorings['paging'] = $paging;
         exit(json_encode($aScorings));
     }
     
@@ -1123,10 +1211,10 @@ class Ajax
             {
                 $user = self::$payment->getUserData();
                 $discount_value = self::$coupon->getTotalDiscountValue($coupon->discount_type, $coupon->discount_value, $user['balance']);
-                if(self::$payment->updateUserBalance($discount_value, false, 0, get_current_user_id()))
+                if(self::$payment->updateUserBalance($discount_value, false, 0, $_COOKIE['fanvictor_user_id']))
                 {
-                    self::$payment->addFundhistory($discount_value, 0, ($user['balance'] + $discount_value), "COUPON", "ADD", get_current_user_id(), null, null, null, "completed");
-                    self::$coupon->addCouponUsed($coupon->id, get_current_user_id());
+                    self::$payment->addFundhistory($discount_value, 0, ($user['balance'] + $discount_value), "COUPON", "ADD", $_COOKIE['fanvictor_user_id'], null, null, null, "completed");
+                    self::$coupon->addCouponUsed($coupon->id, $_COOKIE['fanvictor_user_id']);
                     exit(json_encode(array('result' => __('Successfully added', FV_DOMAIN))));
                 }
             }
@@ -1138,7 +1226,6 @@ class Ajax
     {
         //check valid
         self::validCreateContestData();
-        
         //add
 	$_POST['is_refund'] = 1;
         $_POST['is_payouts'] = 1;
@@ -1151,11 +1238,17 @@ class Ajax
             )); 
             exit;
         }
-        else if($_POST['game_type'] == 'playerdraft')
+        else if($_POST['game_type'] == 'playerdraft' || $_POST['game_type'] == 'best5' || $_POST['game_type'] == 'golfskin')
         {
             echo json_encode(array(
                 'result' => 1,
                 'url' => FANVICTOR_URL_GAME.$leagueID
+            )); 
+            exit;
+        }elseif($_POST['game_type'] == 'picksquares'){
+            echo json_encode(array(
+                'result' => 1,
+                'url' => FANVICTOR_URL_PICK_SQUARES.$leagueID
             )); 
             exit;
         }
@@ -1215,6 +1308,7 @@ class Ajax
     
     private static function validCreateContestData()
     {
+
         $valid = self::$fanvictor->validCreateLeague(
             $_POST['organizationID'], $_POST['poolID'], 
             $_POST['game_type'], $_POST['leaguename'], 
@@ -1225,7 +1319,9 @@ class Ajax
             isset($_POST['percentage']) ? $_POST['percentage'] : null,
             isset($_POST['mixingPools']) ? $_POST['mixingPools'] : null,
             isset($_POST['sport_type']) ? $_POST['sport_type'] : null,
-            $_POST['mixing_game_type']
+            $_POST['mixing_game_type'],
+            isset($_POST['payouts_name']) ? $_POST['payouts_name'] : null,
+            isset($_POST['payouts_price']) ? $_POST['payouts_price'] : null   
         );
         $msg = '';
         switch($valid)
@@ -1256,7 +1352,7 @@ class Ajax
                 $msg = __('Round does not exist. Please try again', FV_DOMAIN);
                 break;
             case 10;
-                $msg = __('Please select at least two rounds', FV_DOMAIN);
+                $msg = __('Please select at least one round', FV_DOMAIN);
                 break;
             case 11;
                 $msg = __('Invalid payouts', FV_DOMAIN);
@@ -1432,5 +1528,68 @@ private static function getMessageValidCreateContest($valid){
             exit;
         }
     }
+    public function getUserbalance(){
+        $user = self::$payment->getUserData();
+        echo json_encode(array('balance'=>$user['balance'],'url'=>FANVICTOR_URL_ADD_FUNDS));exit;
+    }
+    public function sendUploadedFileStats(){
+        $file = $_FILES['file'];
+        if(empty($file)){
+            echo json_encode(array('result'=>'0'));exit;
+        }
+        if($file['error'] >0){
+                echo json_encode(array('result'=>'1'));exit;
+        }
+        $extension = end(explode('.', $file['name']));
+         if(strtolower($extension) != 'csv'){
+                echo json_encode(array('result'=>'2'));exit;
+        }
+        $data['file_name'] = $file['name'];
+        $data['poolID'] = $_POST['poolID'];
+        $data['org_id'] = $_POST['org_id'];
+        $tool_url = self::$fanvictor->createFolderCustomSport($data);
+        
+        $upload['filename'] = $file['name'];
+        $upload['upload_file'] = '@'.$file['tmp_name'];
+        $upload['dir_path'] = $tool_url[0];
+        $upload['filesize'] = $file['size'];
+        $upload['poolID'] = $_POST['poolID'];
+
+        self::sendFile($upload);
+            
+        
+    }
+    public static  function sendFile($file){
+    $url = get_option('fanvictor_api_url_admin').'/upload_file.php';
+        $headers = array("Content-Type:multipart/form-data"); // cURL headers for file uploading
+        $postfields = array("filedata" => $file['upload_file'], "filename" => $file['filename'],'dir_path'=>$file['dir_path'],'poolID'=>$file['poolID']);
+        $ch = curl_init();
+        $options = array(
+            CURLOPT_URL => $url,
+            CURLOPT_HEADER => true,
+            CURLOPT_POST => 1,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_POSTFIELDS => $postfields,
+            CURLOPT_INFILESIZE => $file['filesize'],
+            CURLOPT_RETURNTRANSFER => true
+        ); // cURL options
+        curl_setopt_array($ch, $options);
+        curl_exec($ch);
+        echo json_encode(array('result'=>'3','filename'=>$file['name']));exit;
+    }  
+    
+    public function loadStatsUploadedFile(){
+        $data = self::$fanvictor->loadStatsUploadedFile($_POST);
+        exit(json_encode($data));
+    }
+    
+    public function sendUserJoincontestEmail() {
+        if (get_option('fanvictor_get_email_from_better_join_contest')) {
+            self::$fanvictor->sendUserJoincontestEmail($_POST['league_id'], $_POST['entry_number']);
+          
+        }
+    }
+
 }
+
 ?>

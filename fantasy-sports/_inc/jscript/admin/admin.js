@@ -19,8 +19,13 @@ jQuery.admin =
                 else 
                 {
                     jQuery("#js_id_row" + id).removeAttr('checked');
+                    task.val('submitTask');
                 }
-                break;				
+                break;
+            case 'upload':
+                task.val("upload");
+                this.doSubmit();
+            break;
             default:
                 break;	
         }
@@ -425,6 +430,22 @@ jQuery.admin =
     checkNoneFriends: function()
     {
         jQuery("input[name='friend_ids[]']").removeAttr('checked');
+    },
+    showInfoManageSport: function(){
+            var dialog = jQuery("#readmeDialog").dialog({
+            height: 'auto',
+            width:'400',
+            modal:true,
+            title:"Read me",
+            open:function(){
+                
+            },
+            buttons: {
+                Cancel: function() {
+                    dialog.dialog( "close" );
+                }
+            },
+        });
     }
 }
 

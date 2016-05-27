@@ -28,7 +28,6 @@ class Lobby
         
         $fanvictor = new Fanvictor();
         $aSports = $fanvictor->getListSports();
-
         include FANVICTOR__PLUGIN_DIR_VIEW.'lobby.php';
     }
 }

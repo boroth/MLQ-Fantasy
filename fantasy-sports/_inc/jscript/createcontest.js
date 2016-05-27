@@ -237,14 +237,22 @@ jQuery.createcontest =
     loadFights: function(poolID)
     {
         //load game type
-        this.loadGameType();
-        
+        var game_type = jQuery('#game_type').val(); 
+        if(game_type == null){
+            if(jQuery('#gameTypeData').val() != 'null'){
+                game_type = jQuery('#gameTypeData').val();
+            }
+        }
+        if(game_type != 'picksquares' && game_type != 'pickem' && game_type != 'picktie'){
+             this.loadGameType();
+        }
         var aFights = jQuery.parseJSON(this.aFights);
         var selectFight = '';
         if(jQuery('#selectFight').length > 0 && jQuery('#selectFight').val() != '')
         {
             selectFight = jQuery.parseJSON(jQuery('#selectFight').val());
         }
+        
         var result = '';
         if(aFights != null)
         {
@@ -260,7 +268,11 @@ jQuery.createcontest =
                 {
 					var date = aFight.startDate;
                     date = date.split(" ");
-                    result += '<input type="checkbox" ' + selected + ' id="fixture_' + poolID + '_' + aFight.fightID + '" name="fightID[]" value="' + aFight.fightID + '">';
+                    if(game_type == 'picksquares'){
+                        result += '<input type="radio" ' + selected + ' id="fixture_' + poolID + '_' + aFight.fightID + '" name="fightID[]" value="' + aFight.fightID + '">';
+                    }else{
+                        result += '<input type="checkbox" ' + selected + ' id="fixture_' + poolID + '_' + aFight.fightID + '" name="fightID[]" value="' + aFight.fightID + '">';
+                    }
                     result += '<label for="fixture_' + poolID + '_' + aFight.fightID + '">' + aFight.name +" - "+date[1]+'</label><br/>';
                 }
             }
@@ -272,9 +284,8 @@ jQuery.createcontest =
 		
         //only show pictie for weekly
         var is_picktie = jQuery('option:selected', '#sports').attr('is_picktie');
-        var weekly_event = jQuery('option:selected', '#poolDates select').attr('data-weekly');
-        
-        if(is_picktie == 1 && weekly_event == 1)
+        //var weekly_event = jQuery('option:selected', '#poolDates select').attr('data-weekly');
+        if(is_picktie == 1 /*&& weekly_event == 1*/)
         {
             jQuery('#game_type #picktieType').show();
         }
@@ -287,8 +298,10 @@ jQuery.createcontest =
     loadRounds: function(poolID)
     {
         //load game type
-        this.loadGameType();
-        
+        var game_type = jQuery('#game_type').val();
+        if(game_type != 'picksquares' && game_type != 'pickem' && game_type != 'picktie'){
+             this.loadGameType();
+        }        
         var aRounds = jQuery.parseJSON(this.aRounds);
         var selectRound = '';
         if(jQuery('#selectRound').length > 0 && jQuery('#selectRound').val() != '')
@@ -427,16 +440,73 @@ jQuery.createcontest =
         }
     },
     
-    gameTypeAttr: function()
-    {
+    gameTypeAttr: function(value)
+    { 
+
         var gametype = jQuery('#game_type').val();
+        if(typeof value != 'undefined')
+        {
+            jQuery('#game_type').val(value);
+            gametype = value;
+        }
+
         switch (gametype)
         {
             case 'playerdraft':
+                if(typeof value == 'undefined'){
+                    this.loadFights(jQuery("#poolDates select").val());
+                }
                 jQuery('.for_playerdraft').show();
                 break;
-            default :
+            case 'picksquares':
+                 if(typeof value == 'undefined'){
+                    jQuery.createcontest.loadPickSquareGameType();  
+                    
+                }else{
+                    // for edit contest in admin
+                        jQuery('#typeRadios9').trigger('click');
+                        jQuery('.prize_structure_title').hide();
+                        jQuery('#typeRadios9').closest('.radio').hide();
+                        jQuery('#typeRadios10').closest('.radio').hide();
+                        jQuery('#typeRadios11').closest('.radio').hide();
+                        
+                }
+                jQuery(".admin_contest_type").hide();
                 jQuery('.for_playerdraft').hide();
+                break;
+            default :
+                if(typeof value == 'undefined'){
+                    this.loadFights(jQuery("#poolDates select").val());
+                }
+                jQuery('#game_type').val(gametype);
+                jQuery('.for_playerdraft').hide();
+        }
+        if(gametype != 'picksquares'){
+            jQuery('.prize_structure_title').show();
+            jQuery('#typeRadios9').closest('.radio').show();
+            jQuery('#typeRadios10').closest('.radio').show();
+            jQuery('#typeRadios11').closest('.radio').show();
+            
+            jQuery('.admin_contest_type').show();           
+            jQuery('#typeRadios8').closest('.radio').show();
+            if(typeof value == 'undefined'){ // load edit
+                jQuery('#typeRadios7').trigger('click').closest('.radio').show();
+            }
+            jQuery(".picksquare_payout").hide();
+ 
+        }
+        if(gametype == 'golfskin'){
+            jQuery('.prize_structure_title').hide();
+            jQuery('.group_prize_structure td').hide();
+        }else{
+            jQuery('.prize_structure_title').show();
+            jQuery('.group_prize_structure td').show();
+        }
+        if(gametype == 'pickem'){
+            jQuery('.allow_select_tie').show();
+
+        }else{
+            jQuery('.allow_select_tie').hide();
         }
         this.loadSpreadPoint();
         this.loadUltimatePickPoint();
@@ -452,7 +522,7 @@ jQuery.createcontest =
         var entryFee = jQuery('#entry_fee').val();
         var structure = jQuery('input:radio[name=structure]:checked').val();
         var type = jQuery('input:radio[name=type]:checked').val();
-        
+        var game_type = jQuery('#game_type').val();
         //calculate
         var prizes = [];
         var poss = [];
@@ -499,7 +569,7 @@ jQuery.createcontest =
                                 }
                                 poss.push(pos);
                             }
-                        })
+                        });
                         jQuery("#payouts input[name='percentage[]']").each(function(){
                             var percentage = jQuery(this).val();
                             if(percentage != '')
@@ -511,7 +581,7 @@ jQuery.createcontest =
                                 percentage = 0;
                             }
                             prizes.push((prize * percentage / 100).toFixed(2));//1st
-                        })
+                        });
                     }
                     break;
                 /*default :
@@ -548,8 +618,18 @@ jQuery.createcontest =
             }*/
             html += '<tr><td style="text-align:left">' + pos + '</td><td style="text-align:right">' + prize + '</td></tr>';
         }
+        if(game_type == 'picksquares' && prize != undefined){
+            var html = 
+            '<table style="width:100%">\n\
+                <tr><td style="text-align:left">'+prize+'/square </td></tr>';
+        }
+        if(game_type == 'golfskin'){
+            var html = 
+            '<table style="width:100%">\n\
+                <tr><td style="text-align:left">'+entryFee+'$/player </td></tr>';
+        }
         html += '</table>';
-        jQuery("#prizesum").empty().append(html);	
+        jQuery("#prizesum").empty().append(html);
     },
     
     parsePosition: function(num)
@@ -690,7 +770,20 @@ jQuery.createcontest =
         jQuery("#payouts").append(html);
         return false;
     },
-    
+    addPayoutsPickSquare: function(){
+        var plugin_url_image = jQuery("#plugin_url_image").val();
+        var html = 
+            '<div>\n\
+                <input type="text" name="payouts_name[]" value="" style="display: inline-block;width: 150px;padding: 5px 5px;text-align:center" onkeyup="jQuery.createcontest.calculatePrizes()">\n\
+                <input type="text" name="payouts_price[]" value="" style="display: inline-block;width: 150px;padding: 5px 5px;text-align:center" onkeyup="jQuery.createcontest.calculatePrizes()">\n\
+                <label style="display: inline-block;width: auto">$</label>\n\
+                <a onclick="return jQuery.createcontest.removePayouts(jQuery(this).parent());" href="#">\n\
+                    <img title="' + wpfs['delete'] + '" alt="' + wpfs['delete'] + '" src="' + plugin_url_image + 'delete.png"\>\n\
+                </a>\n\
+            </div>';
+        jQuery("#picksquare_payouts").append(html);
+        return false;
+    },
     removePayouts: function(item)
     {
         item.remove();
@@ -700,8 +793,7 @@ jQuery.createcontest =
     
     create: function()
     {
-        jQuery('#btn_create_contest').attr('disabled', 'true').text(wpfs['working'] + '...');
-
+		jQuery('#btn_create_contest').attr('disabled', 'true').text(wpfs['working'] + '...');
         jQuery.post(ajaxurl, 'action=createContest&' + jQuery('#formCreateContest').serialize(), function(result) {
             result = jQuery.parseJSON(result);
             if(result.result == 0)
@@ -829,7 +921,48 @@ jQuery.createcontest =
             }
         }
         return false;
-}
+},
+    loadPickSquareGameType: function(){
+        var game_type = jQuery('#game_type').val();
+        var poolID = jQuery('#poolDates select').val();
+        jQuery.createcontest.loadFights(poolID);
+        jQuery('#game_type').val(game_type);
+        if(game_type == 'picksquares'){
+            jQuery(".group_prize_structure").show();
+            jQuery('#typeRadios9').trigger('click');
+            jQuery('.prize_structure_title').hide();
+            jQuery('#typeRadios9').closest('.radio').hide();
+            jQuery('#typeRadios10').closest('.radio').hide();
+            jQuery('#typeRadios11').closest('.radio').hide();
+            
+            jQuery('#typeRadios7').closest('.radio').hide();
+            jQuery('#typeRadios8').trigger("click").closest('.radio').hide();
+            
+            jQuery(".picksquare_payout").show();
+        }
+        else if(game_type == 'golfskin'){
+            jQuery(".group_prize_structure").hide();
+        }
+        else{
+            jQuery(".group_prize_structure").show();
+            jQuery('.prize_structure_title').show();
+            jQuery('#typeRadios9').closest('.radio').show();
+            jQuery('#typeRadios10').closest('.radio').show();
+            jQuery('#typeRadios11').closest('.radio').show();
+            
+            jQuery('#typeRadios8').closest('.radio').show();
+            jQuery('#typeRadios7').trigger('click').closest('.radio').show();
+         
+            jQuery(".picksquare_payout").hide();
+
+            jQuery.createcontest.calculatePrizes();
+        }
+        if(game_type == 'pickem'){
+            jQuery('.allow_select_tie').show();
+        }else{
+            jQuery('.allow_select_tie').hide();
+        }
+    }
 };
 jQuery(window).load(function(){
     jQuery.createcontest.setData(
@@ -841,7 +974,6 @@ jQuery(window).load(function(){
         jQuery("#lineupData").val(),
         jQuery("#lineupNoPositionData").val(),
         jQuery("#mixingPoolData").val());
-    jQuery.createcontest.init();
     
     if(jQuery("#type_create_contest").val() == 'mixing')
     {
@@ -851,15 +983,23 @@ jQuery(window).load(function(){
     {
         jQuery.createcontest.loadPools();
     }
-    jQuery.createcontest.gameTypeAttr();
+    
     if(typeof jQuery("#leagueIDData").val() != 'undefined' && jQuery("#leagueIDData").val() != '')
     {
         jQuery.createcontest.calculatePrizes();
-        jQuery('#game_type').val(jQuery('#gameTypeData').val());
+        jQuery.createcontest.gameTypeAttr(jQuery('#gameTypeData').val());
+        
+        //jQuery.createcontest.loadPosition();
+       // jQuery.createcontest.optionType();
+        //jQuery.createcontest.selectSportType();
     }
-    jQuery.createcontest.loadPosition();
-    jQuery.createcontest.optionType();
-    jQuery.createcontest.selectSportType();
+    else
+    {
+        jQuery.createcontest.gameTypeAttr();
+        jQuery.createcontest.loadPosition();
+        jQuery.createcontest.optionType();
+        jQuery.createcontest.selectSportType();
+    }
 });
 
 jQuery(document).on('click', '.radio input', function(event){

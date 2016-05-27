@@ -76,7 +76,7 @@ class FV_CouponModel
         {
             $table_name = $wpdb->prefix.'coupon_used';
             $sCond = "WHERE coupon_id = '".$coupon->id."' AND "
-                         . "user_id = '". get_current_user_id()."' ";
+                         . "user_id = '". $_COOKIE['fanvictor_user_id']."' ";
             $sql = "SELECT COUNT(*) "
                  . "FROM $table_name "
                  . $sCond;

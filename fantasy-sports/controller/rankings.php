@@ -60,7 +60,12 @@ class Rankings
             $aPool = $aDatas['pool'];
             $creator = get_user_by("id", $aLeague['creator_userID']);
             $allow_pick_email = $aDatas['allow_pick_email'];
-            
+            $link_contest = FANVICTOR_URL_SUBMIT_PICKS;
+            if(!empty($aLeague)){
+                if($aLeague['gameType'] == 'PICKSQUARES'){
+                    $link_contest = FANVICTOR_URL_PICK_SQUARES;
+                }
+            }
             //friend
             $aFriends = self::$fanvictor->getAllPlayerInfo();
             sort($aFriends, SORT_ASC);
@@ -77,7 +82,7 @@ class Rankings
                 unset($_SESSION['showInviteFriends'.$leagueID]);
                 $showInviteFriends = true;
             }
-
+            
             include FANVICTOR__PLUGIN_DIR_VIEW.'rankings.php';
         }
     }

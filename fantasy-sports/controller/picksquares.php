@@ -1,5 +1,5 @@
 <?php 
-class Submitpicks
+class Picksquares
 { 
     private static $payment;
     private static $pools;
@@ -13,21 +13,22 @@ class Submitpicks
     
 	public static function process() 
 	{   
-        if(isset($_POST) && isset($_POST["SubmitPicks"]))
+        if(isset($_POST) && isset($_POST["pickSquares"]))
         {
-            add_action( 'wp_enqueue_scripts', array('Submitpicks', 'theme_name_scripts') );
-            add_filter('the_content', array('Submitpicks', 'submitPick'));
+           
+            add_action( 'wp_enqueue_scripts', array('Picksquares', 'theme_name_scripts') );
+            add_filter('the_content', array('Picksquares', 'submitPick'));
         }
         else 
         {
-            add_action( 'wp_enqueue_scripts', array('Submitpicks', 'theme_name_scripts') );
-            add_filter('the_content', array('Submitpicks', 'addContent'));
+            add_action( 'wp_enqueue_scripts', array('Picksquares', 'theme_name_scripts') );
+            add_filter('the_content', array('Picksquares', 'addContent'));
         }
 	} 
     
     public static function theme_name_scripts()
     {
-        wp_enqueue_script('submitpicks.js', FANVICTOR__PLUGIN_URL_JS.'submitpicks.js');
+        wp_enqueue_script('picksquares.js', FANVICTOR__PLUGIN_URL_JS.'picksquares.js');
         wp_enqueue_style('style.css', FANVICTOR__PLUGIN_URL_CSS.'style.css');
     }
 
@@ -37,6 +38,7 @@ class Submitpicks
         {
             return;
         }
+
         $leagueID = pageSegment(3);
         $entry_number = isset($_GET['num']) ? $_GET['num'] : 0;
         $data = self::$fanvictor->getEnterNormalGameData($leagueID, $entry_number);
@@ -46,7 +48,7 @@ class Submitpicks
                 redirect(FANVICTOR_URL_CREATE_CONTEST, __('Contest does not exist', FV_DOMAIN), true);
                 break;
             case 3:
-                redirect(FANVICTOR_URL_RANKINGS.$leagueID, null, true);
+                redirect(FANVICTOR_URL_RANKINGS.$leagueId, null, true);
                 break;
             case 4:
                 redirect(FANVICTOR_URL_CREATE_CONTEST, __('Sorry! This contest was full', FV_DOMAIN), true);
@@ -57,17 +59,10 @@ class Submitpicks
             case 6:
                 redirect(FANVICTOR_URL_CREATE_CONTEST, __('You can not edit started game', FV_DOMAIN), true);
                 break;
-            case 7:
-                redirect(FANVICTOR_URL_PICK_SQUARES.$leagueID.'/?num='.$entry_number, null, true);
-                break;
         }
-        if(!self::$payment->isUserEnoughMoneyToJoin($data['league']['entry_fee'], $leagueID, $entry_number))
+        if(!self::$payment->isUserEnoughMoneyToJoin($data['league']['entry_fee'], $leagueID))
         {
             redirect(FANVICTOR_URL_ADD_FUNDS, __('You do not have enough funds to enter. Please add funds', FV_DOMAIN));
-        }
-        else if(!empty($data) && isset($data['league']['gameType']) && $data['league']['gameType'] == 'PICKSQUARES')
-        {
-            redirect(FANVICTOR_URL_PICK_SQUARES.$leagueID.'/?num='.$entry_number, null, true);
         }
         else 
         {
@@ -78,18 +73,38 @@ class Submitpicks
             $aMethods = $data['methods'];
             $aMinutes = $data['minutes'];
             $aRounds = $data['rounds'];
+            $aPickSquare = $data['picksquares'];
+            $picksquare = '';
+            $userSquares = '';
+            $payoutPickSquare = json_decode($aLeague['picksquares_payouts'],true);
+            if(!empty($aPickSquare)){
+                $picksquare = $aPickSquare['pick_squares'];
+                $userSquares = $aPickSquare['user_squares'];
+            }
+            if(empty($userSquares)){
+                $arr1 = range(0, 9);
+                $arr2 = range(0, 9);
+                shuffle($arr1);
+                shuffle($arr2);
+                $userSquares[] = $arr1;
+                $userSquares[] = $arr2;
+                $userSquares = json_encode($userSquares);
+            }
             $creator = get_user_by("id", $aLeague['creator_userID']);
-            include FANVICTOR__PLUGIN_DIR_VIEW.'submitpicks.php';
+            // payout picksquare
+            include FANVICTOR__PLUGIN_DIR_VIEW.'picksquares.php';
         }
     }
     
     public static function submitPick()
     {
+        
         $leagueID = $_POST['leagueID'];
         $entry_number = $_POST['entry_number'];
         //league
         $league = self::$fanvictor->getLeagueDetail($leagueID);
         $league = $league[0];
+        
         //pool
         self::$pools->selectField(array('status'));
         $aPool = self::$pools->getPools($league['poolID'], null, false, true);
@@ -112,8 +127,7 @@ class Submitpicks
         }
         else 
         {
-        
-            //league
+           
             $elem_to_show = 'error_message';
             $showInvite = false;
             $errorMessage = '';
@@ -136,6 +150,7 @@ class Submitpicks
                 $b = strtolower($b['full_name'] ? $b['full_name'] : $b['user_name']);
                 return strcmp($a, $b);
             });
+
             $string = "";
             foreach ( $aFriends as $buddy )
             {
@@ -145,11 +160,12 @@ class Submitpicks
             }
 
             $myString = $string;
-            
+
             if ( isset($_REQUEST['poolID']) && $_REQUEST['poolID'] )	// modify or update
             {
                 //league
                 $jsonObject = self::$fanvictor->postUserPicks($_POST);
+               
                 if ( $jsonObject != null )
                 {
                     if ( isset($jsonObject['success']) && $jsonObject['success'] )
@@ -209,6 +225,8 @@ class Submitpicks
                             elseif ( 'same_league_has_been_already_created' == $jsonObject['reason'] )
                             {
                                 $errorMessage = __('The league is not created because you have already created the same league.', FV_DOMAIN);
+                            }else if('empty_pick_squares' == $jsonObject['reason']){
+                                $errorMessage = __('Please select at least one square', FV_DOMAIN);
                             }
                         }
                         elseif ( isset($jsonObject['msg']) )
@@ -225,6 +243,8 @@ class Submitpicks
             $_SESSION['userPicksInfo'] = array($leagueID, $_COOKIE['fanvictor_user_id'], 1);
             $_SESSION['showInviteFriends'.$leagueID] = true;
             redirect(FANVICTOR_URL_RANKINGS.$leagueID.'/?num='.$jsonObject['entry_number'], null, true);
+            
+
         }
     }
 } 
