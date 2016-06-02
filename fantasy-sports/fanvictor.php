@@ -116,6 +116,39 @@ function caption_shortcode( $atts, $content = null ) {
 }
 add_shortcode( 'fanvictor_lobby', 'caption_shortcode' );
 
+// add header
+function fv_header( $post_object ) {
+	try {
+		$fantasyPosts = array(2407, 3008, 2427, 9);
+		$postId = $post_object->ID;
+		$parentId = $post_object->post_parent;
+		// Parent fantasy page is 2407, Fantasy Homepage is 3008
+		if ($parentId == 2407 || array_search($postId, $fantasyPosts) !== false) {
+			echo '<div class="panel-grid page-'. $postId . '" id="fantasy-header">' .
+					'<div class="panel-grid-cell">' .
+						'<div class="so-panel widget widget_kadence_simple_image kadence_simple_image panel-first-child panel-last-child">' .
+							'<div class="kad_img_upload_widget">' .
+                				'<img src="http://mlquidditch.com/wp-content/uploads/2016/02/Fantasy.png" alt="">' .
+							'</div>' .
+						'</div>' .
+					'</div>' .
+				'</div>';
+
+			echo '<div class="panel-grid" id="fantasy-header-links">' .
+					'<div class="panel-grid-cell">' .
+						'<div class="so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child" id="panel-3008-1-0-0" data-index="1">' .
+							'<div class="textwidget"><p style="text-align: center;"><a href="http://www.mlquidditch.com/fantasy-home">HOME</a><a href="http://mlquidditch.com/lobby/">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;LOBBY</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;<a href="http://mlquidditch.com/fantasy/create-contest/">CREATE CONTEST</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://mlquidditch.com/beginnersfantasy/">BEGINNER\'S GUIDE</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="http://mlquidditch.com/my-account/">MY ACCOUNT</a><a href="http://mlquidditch.com/fantasy/my-upcoming-entries/">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;MY UPCOMING ENTRIES</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="http://mlquidditch.com/fantasy/my-live-entries/">MY LIVE ENTRIES</a></p></div>' .
+						'</div>' .
+					'</div>' .
+				'</div>';
+		}
+	}
+	catch (Exception $e) {
+		echo 'Caught exception: ',  $e->getMessage(), "\n";
+	}
+}
+add_action('the_post', 'fv_header');
+
 //add footer
 function fv_footer(){
 	echo '<div style="background-color:#FFFFFF;color:#333333;padding:20px;">';
