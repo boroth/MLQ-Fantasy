@@ -1,6 +1,6 @@
 <div class="contentPlugin">
     <h3 class="widget-title">
-        <?php echo __("My History Entries", FV_DOMAIN);?>
+        <?php echo __("My Past Entries", FV_DOMAIN);?>
     </h3>
     <?php if($aLeagues != null):?>
         <div class="content">
