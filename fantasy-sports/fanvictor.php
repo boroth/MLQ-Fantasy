@@ -139,14 +139,14 @@ function fv_header( $post_object ) {
 						'<div class="so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child" id="panel-3008-1-0-0" data-index="1">' .
 							'<div class="textwidget">' .
 								'<p style="text-align: center;">'.
-									'<a href="http://www.mlquidditch.com/fantasy-home">HOME</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;'.
-									'<a href="http://mlquidditch.com/lobby/">LOBBY</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;'.
-									'<a href="http://mlquidditch.com/fantasy/create-contest/">CREATE CONTEST</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;' .
-									'<a href="http://mlquidditch.com/beginnersfantasy/">BEGINNER\'S GUIDE</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;' .
-									'<a href="http://mlquidditch.com/my-account/">MY ACCOUNT</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;' .
-									'<a href="http://mlquidditch.com/fantasy/my-upcoming-entries/">MY UPCOMING ENTRIES</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;' .
-									'<a href="http://mlquidditch.com/fantasy/my-live-entries/">MY LIVE ENTRIES</a>' .
-									'<a href="http://mlquidditch.com/fantasy/my-history-entries/">MY PAST ENTRIES</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;' .
+									'<a href="http://www.mlquidditch.com/fantasy-home">HOME</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'.
+									'<a href="http://mlquidditch.com/lobby/">LOBBY</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'.
+									'<a href="http://mlquidditch.com/fantasy/create-contest/">CREATE CONTEST</a>&nbsp; &nbsp; &nbsp; &nbsp;' .
+									'<a href="http://mlquidditch.com/beginnersfantasy/">BEGINNER\'S GUIDE</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;' .
+									'<a href="http://mlquidditch.com/my-account/">MY ACCOUNT</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ' .
+									'<a href="http://mlquidditch.com/fantasy/my-upcoming-entries/">MY UPCOMING ENTRIES</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;' .
+									'<a href="http://mlquidditch.com/fantasy/my-live-entries/">MY LIVE ENTRIES</a>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ' .
+									'<a href="http://mlquidditch.com/fantasy/my-history-entries/">MY PAST ENTRIES</a>' .
 								'</p>' .
 							'</div>' .
 						'</div>' .

@@ -54,6 +54,6 @@
             </div>
         </div>
     <?php else:?>
-        <?php echo __("There are no history entries", FV_DOMAIN);?>
+        <?php echo __("There are no past entries", FV_DOMAIN);?>
     <?php endif; ?>
 </div>
